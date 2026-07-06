@@ -1,5 +1,4 @@
 import AddIcon from '@mui/icons-material/Add';
-import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
@@ -10,13 +9,12 @@ import GraphicEqOutlinedIcon from '@mui/icons-material/GraphicEqOutlined';
 import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ViewListOutlinedIcon from '@mui/icons-material/ViewListOutlined';
 import { useMemo, useRef, useState } from 'react';
+import { AppHeader } from '../components/AppHeader';
 import {
   documentTree as initialDocumentTree,
   mediaLibraries,
@@ -27,7 +25,12 @@ import {
   type MediaType,
   type TextFileNode,
   type TreeNode,
-} from './data/library';
+} from '../data/library';
+
+type AdminPageProps = {
+  onOpenAdmin: () => void;
+  onOpenRoom: () => void;
+};
 
 type TabState = {
   id: string;
@@ -285,7 +288,19 @@ const replaceTextDocumentInChildren = (children: TreeNode[], documentId: string,
     return child;
   });
 
-function App() {
+function labelForMediaType(kind: MediaType): string {
+  if (kind === 'music') {
+    return 'Музыка';
+  }
+
+  if (kind === 'picture') {
+    return 'Картинка';
+  }
+
+  return 'Звук';
+}
+
+export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [documentRoots, setDocumentRoots] = useState<FolderNode[]>(() => cloneTree(initialDocumentTree));
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>(
@@ -303,7 +318,8 @@ function App() {
   const [musicPlaying, setMusicPlaying] = useState(false);
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
-  const activeDocument = findTextFileById(documentRoots, activeTab?.documentId ?? 'doc-1-text') ?? findFirstTextDocument(documentRoots) ?? fallbackDocument;
+  const activeDocument =
+    findTextFileById(documentRoots, activeTab?.documentId ?? 'doc-1-text') ?? findFirstTextDocument(documentRoots) ?? fallbackDocument;
   const activeLibrary = mediaLibraries[selectedMediaType];
   const activeItems = mediaState[selectedMediaType];
 
@@ -365,9 +381,7 @@ function App() {
       }
 
       const fallback = findFirstTextDocument(nextTree) ?? fallbackDocument;
-      return currentTabs.map((tab) =>
-        tab.documentId === nodeId ? { ...tab, documentId: fallback.id } : tab,
-      );
+      return currentTabs.map((tab) => (tab.documentId === nodeId ? { ...tab, documentId: fallback.id } : tab));
     });
   };
 
@@ -576,9 +590,7 @@ function App() {
           </div>
 
           {isNestedFolderExpanded && child.kind === 'folder' && (
-            <div className="ml-4 space-y-0.5 border-l border-stone-200 pl-2">
-              {renderSidebarNodes(child.children, child.id)}
-            </div>
+            <div className="ml-4 space-y-0.5 border-l border-stone-200 pl-2">{renderSidebarNodes(child.children, child.id)}</div>
           )}
         </div>
       );
@@ -620,31 +632,7 @@ function App() {
       <div className="px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-400">Adminka</div>
 
       <div className="flex flex-1 flex-col">
-        <header className="flex h-14 w-full items-center border-b-2 border-amber-500 bg-[#292420] px-5 text-white shadow-sm">
-          <div className="flex items-baseline gap-2">
-            <span className="font-serif text-[22px] font-semibold tracking-tight">Dnd</span>
-            <span className="hidden font-mono text-[10px] uppercase tracking-[0.25em] text-stone-400 sm:inline">
-              workspace
-            </span>
-          </div>
-          <div className="ml-auto flex items-center gap-1">
-            <button className="relative rounded-full p-2 text-stone-300 transition hover:bg-white/10 hover:text-white">
-              <MailOutlineIcon fontSize="small" />
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-[#292420]">
-                4
-              </span>
-            </button>
-            <button className="relative rounded-full p-2 text-stone-300 transition hover:bg-white/10 hover:text-white">
-              <NotificationsNoneIcon fontSize="small" />
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-[#292420]">
-                17
-              </span>
-            </button>
-            <button className="rounded-full p-2 text-stone-300 transition hover:bg-white/10 hover:text-white">
-              <AccountCircleOutlinedIcon fontSize="small" />
-            </button>
-          </div>
-        </header>
+        <AppHeader isRoomScreen={false} onOpenAdmin={onOpenAdmin} onOpenRoom={onOpenRoom} />
 
         <main className="flex min-h-0 flex-1 w-full">
           <aside className="w-[220px] shrink-0 border-r border-[#e2ddd4] bg-stone-50">
@@ -716,11 +704,7 @@ function App() {
                       </button>
                     </div>
 
-                    {isExpanded && (
-                      <div className="ml-4 space-y-0.5 border-l border-stone-200 pl-2">
-                        {renderSidebarNodes(rootNode.children, rootNode.id)}
-                      </div>
-                    )}
+                    {isExpanded && <div className="ml-4 space-y-0.5 border-l border-stone-200 pl-2">{renderSidebarNodes(rootNode.children, rootNode.id)}</div>}
                   </div>
                 );
               })}
@@ -998,17 +982,3 @@ function App() {
     </div>
   );
 }
-
-function labelForMediaType(kind: MediaType): string {
-  if (kind === 'music') {
-    return 'Музыка';
-  }
-
-  if (kind === 'picture') {
-    return 'Картинка';
-  }
-
-  return 'Звук';
-}
-
-export default App;
