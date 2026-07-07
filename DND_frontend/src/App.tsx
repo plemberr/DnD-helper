@@ -1,38 +1,30 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { AdminPage } from './pages/AdminPage';
 import { RoomPage } from './pages/RoomPage';
 
+function AdminRoute() {
+  const navigate = useNavigate();
+
+  return <AdminPage onOpenAdmin={() => navigate('/admin')} onOpenRoom={() => navigate('/room')} />;
+}
+
+function RoomRoute() {
+  const navigate = useNavigate();
+
+  return <RoomPage onOpenAdmin={() => navigate('/admin')} onOpenRoom={() => navigate('/room')} />;
+}
+
 function App() {
-  const [screen, setScreen] = useState<'admin' | 'room'>(() =>
-    typeof window !== 'undefined' && window.location.hash === '#room' ? 'room' : 'admin',
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/admin" replace />} />
+        <Route path="/admin" element={<AdminRoute />} />
+        <Route path="/room" element={<RoomRoute />} />
+        <Route path="*" element={<Navigate to="/admin" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
-
-  useEffect(() => {
-    const syncFromHash = () => {
-      setScreen(typeof window !== 'undefined' && window.location.hash === '#room' ? 'room' : 'admin');
-    };
-
-    syncFromHash();
-    window.addEventListener('hashchange', syncFromHash);
-
-    return () => window.removeEventListener('hashchange', syncFromHash);
-  }, []);
-
-  const navigateToScreen = (nextScreen: 'admin' | 'room') => {
-    setScreen(nextScreen);
-
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    window.location.hash = nextScreen === 'room' ? '#room' : '#admin';
-  };
-
-  if (screen === 'room') {
-    return <RoomPage onOpenAdmin={() => navigateToScreen('admin')} onOpenRoom={() => navigateToScreen('room')} />;
-  }
-
-  return <AdminPage onOpenAdmin={() => navigateToScreen('admin')} onOpenRoom={() => navigateToScreen('room')} />;
 }
 
 export default App;
