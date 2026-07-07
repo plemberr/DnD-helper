@@ -1,4 +1,4 @@
-node_modules
+DND_frontend/node_modules
 dist
 .vite
 *.log
