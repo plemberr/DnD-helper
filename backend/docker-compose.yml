@@ -20,7 +20,8 @@ services:
   migrator:
     build:
       context: .
-      dockerfile: Dockerfile.migrator
+      dockerfile: Dockerfile
+      target: migrator
     volumes:
       - ./migrations:/app/migrations
     container_name: migrator
@@ -34,7 +35,8 @@ services:
   auth-service:
     build:
       context: .
-      dockerfile: auth-service/Dockerfile
+      dockerfile: Dockerfile
+      target: auth-service
     container_name: auth-service
     restart: unless-stopped
     depends_on:
