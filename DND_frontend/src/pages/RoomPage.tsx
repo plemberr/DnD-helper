@@ -1,4 +1,15 @@
 import { AppHeader } from '../components/AppHeader';
+import AddIcon from '@mui/icons-material/Add';
+import {
+  Box,
+  Button,
+  Chip,
+  Divider,
+  IconButton,
+  Paper,
+  Stack,
+  Typography,
+} from '@mui/material';
 
 type RoomPageProps = {
   onOpenAdmin: () => void;
@@ -7,108 +18,136 @@ type RoomPageProps = {
 
 export function RoomPage({ onOpenAdmin, onOpenRoom }: RoomPageProps) {
   return (
-    <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-[#f3efe8] text-stone-800">
-      
-
-      <div className="flex flex-1 flex-col">
+    <Box
+      sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        width: '100%',
+        flexDirection: 'column',
+        overflowX: 'hidden',
+        bgcolor: 'grey.100',
+        color: 'text.primary',
+      }}
+    >
+      <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
         <AppHeader isRoomScreen onOpenAdmin={onOpenAdmin} onOpenRoom={onOpenRoom} />
 
-        <main className="flex min-h-0 flex-1 w-full">
-          <aside className="w-[220px] shrink-0 border-r border-[#e2ddd4] bg-stone-50">
-            <div className="border-b border-[#e2ddd4] px-3 py-2.5">
-              <div className="font-mono text-[11px] uppercase tracking-wider text-stone-400">Описание</div>
-              <div className="mt-3 rounded-lg border border-[#e2ddd4] bg-white p-3 text-[13px] leading-6 text-stone-700 shadow-sm">
-                Здесь мастер сможет кратко описать сцену, правила или подсказки для участников.
-              </div>
-            </div>
+        <Box component="main" sx={{ display: 'flex', minHeight: 0, flex: 1, width: '100%' }}>
+          <Box component="aside" sx={{ width: 240, flexShrink: 0, borderRight: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+            <Box sx={{ px: 1.5, py: 1.25, borderBottom: 1, borderColor: 'divider' }}>
+              <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+                Описание
+              </Typography>
+              <Paper variant="outlined" sx={{ mt: 1.5, p: 1.5 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                  Здесь мастер сможет кратко описать сцену, правила или подсказки для участников.
+                </Typography>
+              </Paper>
+            </Box>
 
-            <div className="p-2.5">
-              <div className="rounded-lg border border-[#e2ddd4] bg-white px-3 py-2 font-serif text-[14px] text-stone-800 shadow-sm">
-                Дм
-              </div>
+            <Box sx={{ p: 1.5 }}>
+              <Paper variant="outlined" sx={{ px: 1.5, py: 1 }}>
+                <Typography variant="subtitle2">Дм</Typography>
+              </Paper>
 
-              <div className="mt-4 space-y-2 text-[13px] text-stone-700">
+              <Stack spacing={0.5} sx={{ mt: 2 }}>
                 {['Участник1', 'Участник1', 'Участник1', 'Участник1'].map((name, index) => (
-                  <div key={`${name}-${index}`} className="rounded px-2 py-1 hover:bg-white">
-                    {name}
-                  </div>
+                  <Box key={`${name}-${index}`} sx={{ px: 1, py: 0.75, borderRadius: 1, '&:hover': { bgcolor: 'background.paper' } }}>
+                    <Typography variant="body2">{name}</Typography>
+                  </Box>
                 ))}
-              </div>
-            </div>
-          </aside>
+              </Stack>
+            </Box>
+          </Box>
 
-          <section className="flex min-w-0 flex-1 flex-col border-r border-[#e2ddd4] bg-white">
-            <div className="flex h-10 items-center gap-2 border-b border-[#e2ddd4] bg-stone-100 px-3 text-[13px] text-stone-600">
-              <span className="rounded-full border border-stone-300 bg-white px-2.5 py-0.5">Комната мастера</span>
-              <span className="text-stone-300">/</span>
-              <span className="rounded-full border border-stone-300 bg-white px-2.5 py-0.5">Публичный экран</span>
-            </div>
+          <Box component="section" sx={{ display: 'flex', minWidth: 0, flex: 1, flexDirection: 'column', borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ height: 40, px: 1.5, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.100' }}>
+              <Chip size="small" label="Комната мастера" variant="outlined" />
+              <Typography variant="body2" color="text.disabled">
+                /
+              </Typography>
+              <Chip size="small" label="Публичный экран" variant="outlined" />
+            </Stack>
 
-            <div className="flex flex-1 items-center justify-center px-6 py-8 text-center">
-              <div className="w-full max-w-[760px]">
-                <div className="font-serif text-[34px] font-semibold leading-tight text-stone-900">Комната</div>
-                <div className="mt-1 font-serif text-[18px] italic leading-tight text-stone-500">
+            <Box sx={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', px: 3, py: 4, textAlign: 'center' }}>
+              <Box sx={{ width: '100%', maxWidth: 760 }}>
+                <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                  Комната
+                </Typography>
+                <Typography variant="h6" color="text.secondary" sx={{ mt: 0.5, fontStyle: 'italic' }}>
                   Экран для показа текста, картинок, музыки и звука участникам
-                </div>
+                </Typography>
 
-                <div className="mt-10 rounded-xl border border-[#e2ddd4] bg-white p-4 text-left shadow-lg shadow-stone-200/60">
-                  <div className="flex items-center justify-between border-b border-stone-100 pb-2">
-                    <div className="font-medium text-stone-800">Центральная область</div>
-                    <span className="text-amber-600">live</span>
-                  </div>
-                  <div className="mt-3 min-h-[320px] rounded-lg border border-dashed border-stone-200 bg-[#faf8f4]" />
-                  <div className="mt-3 text-[12px] text-stone-500">
+                <Paper variant="outlined" sx={{ mt: 5, p: 2, textAlign: 'left' }}>
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pb: 1, borderBottom: 1, borderColor: 'divider' }}>
+                    <Typography variant="subtitle2">Центральная область</Typography>
+                    <Typography variant="body2" color="warning.main">
+                      live
+                    </Typography>
+                  </Stack>
+                  <Box sx={{ mt: 1.5, minHeight: 320, borderRadius: 2, border: 1, borderStyle: 'dashed', borderColor: 'divider', bgcolor: '#faf8f4' }} />
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
                     Здесь позже появится расшаренный контент со стороны админки.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+                  </Typography>
+                </Paper>
+              </Box>
+            </Box>
+          </Box>
 
-          <aside className="flex w-[340px] shrink-0 flex-col border-l border-[#e2ddd4] bg-stone-50">
-            <div className="flex h-12 items-center justify-between border-b border-[#e2ddd4] bg-white px-3">
-              <div className="font-serif text-[17px] font-medium text-stone-900">Игроки</div>
-              <button className="rounded-full p-1.5 text-stone-500 transition hover:bg-amber-50 hover:text-amber-700">
-                +
-              </button>
-            </div>
+          <Box component="aside" sx={{ display: 'flex', width: 340, flexShrink: 0, flexDirection: 'column', borderLeft: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ height: 48, px: 1.5, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                Игроки
+              </Typography>
+              <IconButton size="small">
+                <AddIcon fontSize="small" />
+              </IconButton>
+            </Stack>
 
-            <div className="space-y-3 p-3">
-              <div className="rounded-xl border border-[#e2ddd4] bg-white p-3 shadow-sm">
-                <div className="font-medium text-stone-800">Имя игрока</div>
-                <div className="text-[13px] text-stone-500">Класс</div>
-                <div className="mt-3 border-b border-stone-200" />
-                <div className="mt-2 font-mono text-[12px] text-stone-600">34/34 hp</div>
-              </div>
+            <Stack spacing={1.5} sx={{ p: 1.5 }}>
+              <Paper variant="outlined" sx={{ p: 1.5 }}>
+                <Typography variant="subtitle2">Имя игрока</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Класс
+                </Typography>
+                <Divider sx={{ my: 1.5 }} />
+                <Typography variant="caption" color="text.secondary">
+                  34/34 hp
+                </Typography>
+              </Paper>
 
-              <div className="rounded-xl border border-[#e2ddd4] bg-white p-3 shadow-sm">
-                <div className="font-medium text-stone-800">Имя игрока</div>
-                <div className="text-[13px] text-stone-500">Класс</div>
-                <div className="mt-3 border-b border-stone-200" />
-                <div className="mt-2 font-mono text-[12px] text-stone-600">34/34 hp</div>
-              </div>
+              <Paper variant="outlined" sx={{ p: 1.5 }}>
+                <Typography variant="subtitle2">Имя игрока</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Класс
+                </Typography>
+                <Divider sx={{ my: 1.5 }} />
+                <Typography variant="caption" color="text.secondary">
+                  34/34 hp
+                </Typography>
+              </Paper>
 
-              <div className="rounded-xl border border-[#e2ddd4] bg-white p-3 shadow-sm">
-                <div className="text-[13px] text-stone-700">Имя игрока хочет присоединиться</div>
-                <div className="mt-4 flex gap-2">
-                  <button className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-[13px] text-amber-800 transition hover:bg-amber-100">
+              <Paper variant="outlined" sx={{ p: 1.5 }}>
+                <Typography variant="body2">Имя игрока хочет присоединиться</Typography>
+                <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                  <Button size="small" variant="outlined" color="warning">
                     Принять
-                  </button>
-                  <button className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[13px] text-stone-700 transition hover:bg-stone-100">
+                  </Button>
+                  <Button size="small" variant="outlined" color="inherit">
                     Отклонить
-                  </button>
-                </div>
-              </div>
+                  </Button>
+                </Stack>
+              </Paper>
 
-              <div className="mt-6 rounded-xl border border-[#e2ddd4] bg-white p-3 shadow-sm">
-                <button className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-4 font-medium text-amber-900 transition hover:bg-amber-100">
+              <Paper variant="outlined" sx={{ mt: 2, p: 1.5 }}>
+                <Button fullWidth variant="outlined" color="warning" sx={{ py: 1.5 }}>
                   Открыть полный лист персонажа
-                </button>
-              </div>
-            </div>
-          </aside>
-        </main>
-      </div>
-    </div>
+                </Button>
+              </Paper>
+            </Stack>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }

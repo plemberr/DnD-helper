@@ -6,6 +6,7 @@ import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import ViewListOutlinedIcon from '@mui/icons-material/ViewListOutlined';
+import { Box, IconButton, Paper, Stack, Typography } from '@mui/material';
 import { mediaLibraries, type MediaItem, type MediaType } from '../../data/library';
 
 type MediaLibraryPanelProps = {
@@ -32,93 +33,112 @@ export function MediaLibraryPanel({
   const orderedMediaTypes: MediaType[] = ['picture', 'sound', 'music'];
 
   return (
-    <aside className="flex w-[340px] shrink-0 flex-col border-l border-[#e2ddd4] bg-stone-50">
-      <div className="flex h-12 items-center border-b border-[#e2ddd4] bg-white px-3">
-        <div className="flex-1 text-center font-serif text-[17px] font-medium text-stone-900">Библиотека медиа файлов</div>
-        <button className="rounded-full p-1.5 text-stone-500 transition hover:bg-amber-50 hover:text-amber-700" onClick={onToggleViewMode}>
+    <Box component="aside" sx={{ width: 340, flexShrink: 0, display: 'flex', flexDirection: 'column', borderLeft: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+      <Stack direction="row" alignItems="center" sx={{ px: 1.5, height: 48, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+        <Typography variant="subtitle1" sx={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>
+          Библиотека медиа файлов
+        </Typography>
+        <IconButton size="small" onClick={onToggleViewMode}>
           {viewMode === 'list' ? <ViewListOutlinedIcon fontSize="small" /> : <GridViewOutlinedIcon fontSize="small" />}
-        </button>
-      </div>
+        </IconButton>
+      </Stack>
 
-      <div className="flex-1 overflow-auto">
-        <div className="space-y-3 p-3">
+      <Box sx={{ flex: 1, overflow: 'auto' }}>
+        <Stack spacing={1.5} sx={{ p: 1.5 }}>
           {orderedMediaTypes.map((mediaType) => {
             const library = mediaLibraries[mediaType];
             const items = mediaState[mediaType];
 
             return (
-              <section key={mediaType} className="rounded-lg border border-stone-200 bg-white p-3">
-                <div className="flex items-center">
-                  <div className="font-serif text-[16px] font-medium text-stone-900">{library.title}</div>
-                  <div className="ml-auto flex items-center gap-1 text-amber-700">
+              <Paper key={mediaType} variant="outlined" sx={{ p: 1.5 }}>
+                <Stack direction="row" alignItems="center">
+                  <Typography variant="subtitle2">{library.title}</Typography>
+                  <Stack direction="row" alignItems="center" spacing={0.25} sx={{ ml: 'auto', color: 'warning.dark' }}>
                     {mediaType === 'music' && <MusicNoteIcon fontSize="small" />}
                     {mediaType === 'picture' && <ImageOutlinedIcon fontSize="small" />}
                     {mediaType === 'sound' && <GraphicEqOutlinedIcon fontSize="small" />}
-                    <button
-                      className="rounded-full p-1 text-stone-500 hover:bg-amber-50 hover:text-amber-700"
-                      onClick={() => onAddMediaItem(mediaType)}
-                    >
+                    <IconButton size="small" onClick={() => onAddMediaItem(mediaType)}>
                       <AddIcon fontSize="small" />
-                    </button>
-                  </div>
-                </div>
+                    </IconButton>
+                  </Stack>
+                </Stack>
 
                 {viewMode === 'list' ? (
-                  <div className="mt-2 space-y-1.5">
+                  <Stack spacing={1} sx={{ mt: 1 }}>
                     {items.map((item, index) => (
-                      <div
+                      <Box
                         key={item.id}
                         draggable
                         onDragStart={() => onMediaDragStart(mediaType, item.id)}
                         onDragEnd={onMediaDragEnd}
                         onDragOver={(event) => event.preventDefault()}
                         onDrop={() => onMediaDropAt(mediaType, index)}
-                        className="flex items-center gap-2 rounded-md border border-stone-200 bg-stone-50 px-3 py-1.5 text-[13px] text-stone-700 transition hover:border-amber-300"
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          px: 1.25,
+                          py: 0.75,
+                          borderRadius: 1,
+                          border: 1,
+                          borderColor: 'divider',
+                          bgcolor: 'grey.50',
+                          '&:hover': { borderColor: 'warning.light' },
+                        }}
                       >
-                        <DragIndicatorIcon sx={{ fontSize: 16 }} className="cursor-grab text-stone-300" />
-                        <span className="flex-1 truncate">{item.name}</span>
-                        <button
-                          className="rounded-full p-1 text-stone-400 hover:bg-red-50 hover:text-red-500"
-                          onClick={() => onDeleteMediaItem(mediaType, item.id)}
-                          aria-label="Удалить"
-                        >
+                        <DragIndicatorIcon sx={{ fontSize: 16, cursor: 'grab', color: 'text.secondary' }} />
+                        <Typography variant="body2" noWrap sx={{ flex: 1 }}>
+                          {item.name}
+                        </Typography>
+                        <IconButton size="small" onClick={() => onDeleteMediaItem(mediaType, item.id)} aria-label="Удалить">
                           <DeleteOutlineIcon sx={{ fontSize: 16 }} />
-                        </button>
-                      </div>
+                        </IconButton>
+                      </Box>
                     ))}
-                  </div>
+                  </Stack>
                 ) : (
-                  <div className="mt-2 grid grid-cols-2 gap-2">
+                  <Box sx={{ mt: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
                     {items.map((item, index) => (
-                      <div
+                      <Box
                         key={item.id}
                         draggable
                         onDragStart={() => onMediaDragStart(mediaType, item.id)}
                         onDragEnd={onMediaDragEnd}
                         onDragOver={(event) => event.preventDefault()}
                         onDrop={() => onMediaDropAt(mediaType, index)}
-                        className="flex items-center gap-2 rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-[13px] text-stone-700 transition hover:border-amber-300"
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          px: 1,
+                          py: 1,
+                          borderRadius: 1,
+                          border: 1,
+                          borderColor: 'divider',
+                          bgcolor: 'grey.50',
+                          '&:hover': { borderColor: 'warning.light' },
+                        }}
                       >
-                        <DragIndicatorIcon sx={{ fontSize: 16 }} className="cursor-grab text-stone-300" />
-                        <span className="flex-1 truncate">{item.name}</span>
-                        <button
-                          className="rounded-full p-1 text-stone-400 hover:bg-red-50 hover:text-red-500"
-                          onClick={() => onDeleteMediaItem(mediaType, item.id)}
-                          aria-label="Удалить"
-                        >
+                        <DragIndicatorIcon sx={{ fontSize: 16, cursor: 'grab', color: 'text.secondary' }} />
+                        <Typography variant="body2" noWrap sx={{ flex: 1 }}>
+                          {item.name}
+                        </Typography>
+                        <IconButton size="small" onClick={() => onDeleteMediaItem(mediaType, item.id)} aria-label="Удалить">
                           <DeleteOutlineIcon sx={{ fontSize: 16 }} />
-                        </button>
-                      </div>
+                        </IconButton>
+                      </Box>
                     ))}
-                  </div>
+                  </Box>
                 )}
 
-                <div className="mt-3 text-[12px] italic text-stone-400">{library.subtitle}</div>
-              </section>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block', fontStyle: 'italic' }}>
+                  {library.subtitle}
+                </Typography>
+              </Paper>
             );
           })}
-        </div>
-      </div>
-    </aside>
+        </Stack>
+      </Box>
+    </Box>
   );
 }
