@@ -8,7 +8,7 @@ type RoomPageProps = {
 export function RoomPage({ onOpenAdmin, onOpenRoom }: RoomPageProps) {
   return (
     <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-[#f3efe8] text-stone-800">
-      <div className="px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-400">Adminka</div>
+      
 
       <div className="flex flex-1 flex-col">
         <AppHeader isRoomScreen onOpenAdmin={onOpenAdmin} onOpenRoom={onOpenRoom} />

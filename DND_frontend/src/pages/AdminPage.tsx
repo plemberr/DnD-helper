@@ -33,6 +33,7 @@ type DragState =
       kind: DragKind;
       id: string;
       sourceFolderId?: string;
+      mediaType?: MediaType;
     }
   | null;
 
@@ -84,8 +85,6 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
     nodeHelper.findTextFileById(documentRoots, activeTab?.documentId ?? 'doc-1-text') ??
     nodeHelper.findFirstTextDocument(documentRoots) ??
     fallbackDocument;
-  const activeItems = mediaState[selectedMediaType];
-
   const breadcrumbs = useMemo(() => ['Корень', 'Кампания', activeDocument.name], [activeDocument]);
 
   const updateDragState = (nextDragState: DragState) => {
@@ -194,32 +193,32 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
     });
   };
 
-  const addMediaItem = () => {
+  const addMediaItem = (mediaType: MediaType) => {
     setMediaState((current) => {
-      const next = [...current[selectedMediaType]];
+      const next = [...current[mediaType]];
       const newIndex = next.filter((item) => item.kind === 'file').length + 1;
       next.push({
-        id: `${selectedMediaType}-${Date.now()}`,
-        name: `${labelForMediaType(selectedMediaType)} файл ${newIndex}`,
+        id: `${mediaType}-${Date.now()}`,
+        name: `${labelForMediaType(mediaType)} файл ${newIndex}`,
         kind: 'file',
       });
-      return { ...current, [selectedMediaType]: next };
+      return { ...current, [mediaType]: next };
     });
   };
 
-  const deleteMediaItem = (itemId: string) => {
+  const deleteMediaItem = (mediaType: MediaType, itemId: string) => {
     setMediaState((current) => ({
       ...current,
-      [selectedMediaType]: current[selectedMediaType].filter((item) => item.id !== itemId),
+      [mediaType]: current[mediaType].filter((item) => item.id !== itemId),
     }));
   };
 
-  const moveMediaItem = (fromIndex: number, toIndex: number) => {
+  const moveMediaItem = (mediaType: MediaType, fromIndex: number, toIndex: number) => {
     setMediaState((current) => {
-      const next = [...current[selectedMediaType]];
+      const next = [...current[mediaType]];
       const [movedItem] = next.splice(fromIndex, 1);
       next.splice(toIndex, 0, movedItem);
-      return { ...current, [selectedMediaType]: next };
+      return { ...current, [mediaType]: next };
     });
   };
 
@@ -231,15 +230,15 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
     }
   };
 
-  const handleMediaDropAt = (index: number) => {
+  const handleMediaDropAt = (mediaType: MediaType, index: number) => {
     const dragged = dragStateRef.current;
-    if (dragged?.kind !== 'media') {
+    if (dragged?.kind !== 'media' || dragged.mediaType !== mediaType) {
       return;
     }
 
-    const fromIndex = activeItems.findIndex((entry) => entry.id === dragged.id);
+    const fromIndex = mediaState[mediaType].findIndex((entry) => entry.id === dragged.id);
     if (fromIndex !== -1 && fromIndex !== index) {
-      moveMediaItem(fromIndex, index);
+      moveMediaItem(mediaType, fromIndex, index);
     }
     updateDragState(null);
   };
@@ -279,7 +278,7 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
 
   return (
     <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-[#f3efe8] text-stone-800">
-      <div className="px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-400">Adminka</div>
+      
 
       <div className="flex flex-1 flex-col">
         <AppHeader isRoomScreen={false} onOpenAdmin={onOpenAdmin} onOpenRoom={onOpenRoom} />
@@ -315,14 +314,12 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
           />
 
           <MediaLibraryPanel
-            selectedMediaType={selectedMediaType}
+            mediaState={mediaState}
             viewMode={viewMode}
-            activeItems={activeItems}
             onToggleViewMode={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
             onAddMediaItem={addMediaItem}
-            onSelectMediaType={setSelectedMediaType}
             onDeleteMediaItem={deleteMediaItem}
-            onMediaDragStart={(itemId) => updateDragState({ kind: 'media', id: itemId })}
+            onMediaDragStart={(mediaType, itemId) => updateDragState({ kind: 'media', id: itemId, mediaType })}
             onMediaDragEnd={() => updateDragState(null)}
             onMediaDropAt={handleMediaDropAt}
           />

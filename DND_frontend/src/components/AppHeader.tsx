@@ -1,7 +1,6 @@
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
-import MailOutlineIcon from '@mui/icons-material/MailOutline';
-import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
+import { useNavigate } from 'react-router-dom';
 
 type AppHeaderProps = {
   isRoomScreen: boolean;
@@ -10,6 +9,8 @@ type AppHeaderProps = {
 };
 
 export function AppHeader({ isRoomScreen, onOpenRoom, onOpenAdmin }: AppHeaderProps) {
+  const navigate = useNavigate();
+
   return (
     <header className="flex h-14 w-full items-center border-b-2 border-amber-500 bg-[#292420] px-5 text-white shadow-sm">
       <div className="flex items-baseline gap-2">
@@ -51,19 +52,12 @@ export function AppHeader({ isRoomScreen, onOpenRoom, onOpenAdmin }: AppHeaderPr
       </div>
 
       <div className="flex items-center gap-1">
-        <button className="relative rounded-full p-2 text-stone-300 transition hover:bg-white/10 hover:text-white">
-          <MailOutlineIcon fontSize="small" />
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-[#292420]">
-            4
-          </span>
-        </button>
-        <button className="relative rounded-full p-2 text-stone-300 transition hover:bg-white/10 hover:text-white">
-          <NotificationsNoneIcon fontSize="small" />
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-[#292420]">
-            17
-          </span>
-        </button>
-        <button className="rounded-full p-2 text-stone-300 transition hover:bg-white/10 hover:text-white">
+        <button
+          type="button"
+          onClick={() => navigate('/profile')}
+          className="rounded-full p-2 text-stone-300 transition hover:bg-white/10 hover:text-white"
+          aria-label="Открыть профиль"
+        >
           <AccountCircleOutlinedIcon fontSize="small" />
         </button>
       </div>

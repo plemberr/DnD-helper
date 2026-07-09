@@ -112,7 +112,7 @@ export const mediaLibraries: Record<
   }
 > = {
   music: {
-    title: 'Music',
+    title: 'Музыка',
     subtitle: 'Долгие треки для нижнего плеера',
     icon: 'music',
     items: [
@@ -124,7 +124,7 @@ export const mediaLibraries: Record<
     ],
   },
   picture: {
-    title: 'Pictures',
+    title: 'Картинки',
     subtitle: 'Картинки, превью и вложения',
     icon: 'picture',
     items: [
@@ -136,7 +136,7 @@ export const mediaLibraries: Record<
     ],
   },
   sound: {
-    title: 'Sounds',
+    title: 'Звуки',
     subtitle: 'Короткие эффекты, не прерывают музыку',
     icon: 'sound',
     items: [
