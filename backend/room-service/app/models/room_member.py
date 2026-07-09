@@ -3,7 +3,7 @@ from sqlalchemy import Integer, String, DateTime, Column, ForeignKey, func
 from enum import StrEnum
 from sqlalchemy import Enum as SAEnum
 
-class Role(str, StrEnum):
+class Role(StrEnum):
     creator = 'creator'
     master = 'master'
     player = 'player'

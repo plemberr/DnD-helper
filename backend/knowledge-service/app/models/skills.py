@@ -3,7 +3,7 @@ from sqlalchemy import Integer, Column, ForeignKey, String
 from enum import StrEnum
 from sqlalchemy import Enum as SAEnum
 
-class Type(str, StrEnum):
+class Type(StrEnum):
     ability = "ability"
     saving_throw = "saving_throw"
     skill = "skill"

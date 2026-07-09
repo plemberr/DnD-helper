@@ -4,7 +4,7 @@ from enum import StrEnum
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import ARRAY
 
-class Type(str, StrEnum):
+class Type(StrEnum):
     image = 'image'
     audio = 'audio'
     sound = 'sound'

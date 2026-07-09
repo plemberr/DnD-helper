@@ -3,7 +3,7 @@ from sqlalchemy import Integer, DateTime, func, Column
 from enum import StrEnum
 from sqlalchemy import Enum as SAEnum
 
-class EntityType(str, StrEnum):
+class EntityType(StrEnum):
     document = 'document'
     media = 'media'
 

@@ -3,7 +3,7 @@ from sqlalchemy import Integer, String, DateTime, Column, ForeignKey, func
 from enum import StrEnum
 from sqlalchemy import Enum as SAEnum
 
-class Status(str, StrEnum):
+class Status(StrEnum):
     pending = 'pending'
     accepted = 'accepted'
     rejected = 'rejected'
