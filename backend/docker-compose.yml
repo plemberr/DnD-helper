@@ -21,6 +21,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.migrator
+    volumes:
+      - ./migrations:/app/migrations
     container_name: migrator
     depends_on:
       db:

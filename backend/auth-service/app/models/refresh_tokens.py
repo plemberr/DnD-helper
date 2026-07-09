@@ -1,14 +1,13 @@
 from sqlalchemy import Integer, String, DateTime, func, Column, ForeignKey
 from common.db import Base
-import enum
+from enum import StrEnum
 from sqlalchemy import Enum as SAEnum
 
-class RevokedReason(str, enum.Enum):
+class RevokedReason(StrEnum):
     logout = 'logout'
     rotated = 'rotated'
     reuse_detected = 'reuse_detected'
     password_changed = 'password_changed'
-    admin = 'admin'
 
 class RefreshToken(Base):
     __tablename__ = 'refresh_tokens'
