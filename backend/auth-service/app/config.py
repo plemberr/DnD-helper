@@ -1,14 +1,12 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from common.config import CommonSettings
 
 
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+class Settings(CommonSettings):
 
-    # PostgresSQL
-    database_url: str = "postgresql+asyncpg://auth_user:auth_pass@localhost:5432/auth_db"
+    # БД из общего config
 
     # JWT
     jwt_algorithm: str = "RS256"

@@ -33,7 +33,7 @@ openssl rsa -in keys/private.pem -pubout -out keys/public.pem
 Схема БД управляется миграциями — `Base.metadata.create_all`.
 
 ```bash
-pip install -r requirements.txt 
+pip install -r requirements.txt.txt 
 alembic upgrade head # применить все миграции
 ```
 
@@ -43,13 +43,14 @@ alembic upgrade head # применить все миграции
 
 ## 3. Запуск через Docker
 
-Поднимает PostgreSQL, применяет миграции и стартует сервис. Ключи должны быть сгенерированы заранее.
+Всё поднимается из корня `backend/`, не из папки `auth-service/` — там лежит общий `docker-compose.yml`, поднимающий БД, мигратор и сервисы:
 
 ```bash
 docker compose up --build
 ```
 
-Сервис на `http://localhost:8000`, документация Swagger на `http://localhost:8000/docs`.
+Порядок старта: `db` → `migrator` (применяет миграции и завершается) → `auth-service`.
+Сервис на `http://localhost:8001`, документация Swagger на `http://localhost:8001/docs`.
 
 ---
 
@@ -62,28 +63,24 @@ auth-service/
 │   ├── config.py               # настройки (.env), загрузка RSA-ключей 
 │   ├── schemas.py              # Pydantic-схемы запросов/ответов
 │   ├── security.py             # хэширование паролей (argon2id/bcrypt), JWT, refresh-токены
-│   ├── crud.py                 # операции с БД
 │   ├── dependencies.py         # get_current_user (проверка access-токена)
 │   ├── routers/
 │   │   └── auth.py             # /auth/register /login /refresh /logout /me (GET+PATCH) /me/password
-│   ├── db/
-│   │   ├── database.py         # базовый класс для БД
-│   │   └── session.py          # функция get_db, сессия с БД
+│   ├── db.py                   # DatabaseSessionManager с database_url сервиса
+│   ├── repositories/           # запросы к БД
+│   │   ├── user_repository.py
+│   │   └── refresh_token_repository.py
+│   ├── services/
+│   │   └── auth_service.py     # выдача access/refresh токенов
 │   └── models/
 │       ├── refresh_tokens.py   # моделька refresh_tokens
 │       └── users.py            # моделька users
-│
-├── migrations/                 # Alembic
-│   ├── env.py
-│   └── versions/
-│       └── 0001_initial_schema.py
 │
 ├── keys/                       # private.pem / public.pem
 ├── alembic.ini
 ├── requirements.txt
 ├── Dockerfile
-├── docker-compose.yml
-├── .env.example
+├── .env
 └── README.md
 ```
 

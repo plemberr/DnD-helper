@@ -1,5 +1,5 @@
 from sqlalchemy import Integer, String, DateTime, func, Column, ForeignKey
-from app.db import Base
+from common.db import Base
 import enum
 from sqlalchemy import Enum as SAEnum
 

@@ -1,0 +1,26 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY common ./common
+
+COPY alembic.ini .
+COPY migrations ./migrations
+
+
+RUN mkdir -p services_models
+COPY auth-service/app/models ./services_models/auth_service
+
+RUN touch ./services_models/__init__.py \
+    && find ./services_models -mindepth 1 -maxdepth 1 -type d -exec sh -c 'touch "$1/__init__.py"' _ {} \;
+
+ENV PYTHONPATH=/app
+
+CMD ["alembic", "upgrade", "head"]
