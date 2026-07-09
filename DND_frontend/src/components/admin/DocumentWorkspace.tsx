@@ -2,6 +2,8 @@ import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { TextFileNode } from '../../data/library';
 
 type TabState = {
@@ -84,8 +86,8 @@ export function DocumentWorkspace({
         </button>
       </div>
 
-      <div className="flex flex-1 flex-col items-center px-6 py-8 text-center">
-        <div className="mb-5 flex items-center gap-1.5 self-start font-mono text-[11px] uppercase tracking-wide text-stone-500">
+      <div className="flex min-h-0 flex-1 flex-col px-4 py-4">
+        <div className="mb-4 flex items-center gap-1.5 self-start font-mono text-[11px] uppercase tracking-wide text-stone-500">
           <FolderOutlinedIcon fontSize="small" />
           {breadcrumbs.map((crumb, index) => (
             <span key={crumb} className="flex items-center gap-1.5">
@@ -96,22 +98,18 @@ export function DocumentWorkspace({
             </span>
           ))}
         </div>
-
-        <div className="mt-8 max-w-[520px]">
-          <div className="font-serif text-[36px] font-semibold leading-tight text-stone-900">Txt Doc</div>
-          <div className="mt-1 font-serif text-[20px] italic leading-tight text-stone-500">Аналог Obsidian</div>
-          <p className="mx-auto mt-4 max-w-[420px] text-[15px] leading-6 text-stone-600">
-            В себе хранит текст, ссылки на файлы и связи между документами комнаты.
-          </p>
-
-          <div className="mx-auto mt-12 w-[360px] rounded-lg border border-stone-200 bg-white p-4 text-left shadow-lg shadow-stone-200/60">
-            <div className="flex items-center justify-between border-b border-stone-100 pb-2">
-              <div className="text-[14px] font-medium text-stone-800">{activeDocument.name}</div>
+        <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
+          <section className="flex min-h-0 flex-col rounded-lg border border-stone-200 bg-stone-50 p-4">
+            <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+              <div>
+                <div className="text-[14px] font-semibold text-stone-900">{activeDocument.name}</div>
+                <div className="text-[12px] text-stone-500">{activeDocument.summary}</div>
+              </div>
               <DescriptionOutlinedIcon sx={{ fontSize: 16 }} className="text-amber-600" />
             </div>
-            <div className="mt-2 text-[12px] text-stone-500">{activeDocument.summary}</div>
+
             <textarea
-              className="mt-3 min-h-[180px] w-full rounded-md border border-stone-200 bg-stone-50 p-3 text-[14px] leading-6 text-stone-800 outline-none transition focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/20"
+              className="mt-3 min-h-0 flex-1 resize-none rounded-md border border-stone-200 bg-white p-3 font-mono text-[14px] leading-6 text-stone-800 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
               value={activeDocument.content}
               onChange={(event) => onUpdateTextContent(activeDocument.id, event.target.value)}
             />
@@ -126,7 +124,50 @@ export function DocumentWorkspace({
                 </span>
               ))}
             </div>
-          </div>
+          </section>
+
+          <section className="flex min-h-0 flex-col rounded-lg border border-stone-200 bg-white p-4">
+            <div className="border-b border-stone-200 pb-2 text-[13px] font-semibold uppercase tracking-wide text-stone-500">
+              Preview Markdown
+            </div>
+            <div className="mt-3 min-h-0 flex-1 overflow-auto rounded-md border border-stone-100 bg-stone-50 p-4 text-left text-[14px] leading-7 text-stone-800">
+              {activeDocument.content.trim() ? (
+                <article className="space-y-3">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      h1: ({ ...props }) => <h1 className="mt-2 text-2xl font-bold text-stone-900" {...props} />,
+                      h2: ({ ...props }) => <h2 className="mt-2 text-xl font-semibold text-stone-900" {...props} />,
+                      h3: ({ ...props }) => <h3 className="mt-1 text-lg font-semibold text-stone-900" {...props} />,
+                      p: ({ ...props }) => <p className="text-stone-800" {...props} />,
+                      a: ({ ...props }) => <a className="text-amber-700 underline decoration-amber-500/50" {...props} />,
+                      code: ({ ...props }) => (
+                        <code className="rounded bg-stone-200 px-1.5 py-0.5 font-mono text-[13px] text-stone-900" {...props} />
+                      ),
+                      pre: ({ ...props }) => (
+                        <pre
+                          className="overflow-auto rounded-md bg-stone-900 p-3 font-mono text-[13px] text-stone-100 [&>code]:bg-transparent [&>code]:p-0"
+                          {...props}
+                        />
+                      ),
+                      ul: ({ ...props }) => <ul className="list-disc space-y-1 pl-6" {...props} />,
+                      ol: ({ ...props }) => <ol className="list-decimal space-y-1 pl-6" {...props} />,
+                      blockquote: ({ ...props }) => (
+                        <blockquote className="border-l-4 border-amber-300 pl-3 italic text-stone-600" {...props} />
+                      ),
+                      table: ({ ...props }) => <table className="w-full border-collapse text-[13px]" {...props} />,
+                      th: ({ ...props }) => <th className="border border-stone-300 bg-stone-100 px-2 py-1 text-left" {...props} />,
+                      td: ({ ...props }) => <td className="border border-stone-200 px-2 py-1 align-top" {...props} />,
+                    }}
+                  >
+                    {activeDocument.content}
+                  </ReactMarkdown>
+                </article>
+              ) : (
+                <p className="text-stone-400">Введите markdown-текст слева, чтобы увидеть превью.</p>
+              )}
+            </div>
+          </section>
         </div>
       </div>
     </section>
