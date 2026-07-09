@@ -9,7 +9,7 @@ __pycache__/
 *.pyc
 .env
 keys/*.pem
-*.pem
 .venv/
 venv/
 /DND_frontend/package-lock.json
+*.pem
