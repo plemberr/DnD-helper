@@ -1,0 +1,8 @@
+DND_frontend/node_modules
+dist
+.vite
+*.log
+*.tsbuildinfo
+*.package-lock.json
+.idea/
+/DND_frontend/package-lock.json

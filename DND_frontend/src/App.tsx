@@ -1,10 +1,12 @@
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
 import RoomsPage from './pages/RoomsPage';
+import { AdminPage } from './pages/AdminPage';
+import { RoomPage } from './pages/RoomPage';
 
 const appTheme = createTheme({
   palette: {
@@ -19,6 +21,18 @@ const appTheme = createTheme({
   },
 });
 
+function AdminRoute() {
+  const navigate = useNavigate();
+
+  return <AdminPage onOpenAdmin={() => navigate('/admin')} onOpenRoom={() => navigate('/room')} />;
+}
+
+function RoomRoute() {
+  const navigate = useNavigate();
+
+  return <RoomPage onOpenAdmin={() => navigate('/admin')} onOpenRoom={() => navigate('/room')} />;
+}
+
 function App() {
   return (
     <ThemeProvider theme={appTheme}>
@@ -27,10 +41,16 @@ function App() {
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Navigate to="/rooms" replace />} />
+
             <Route path="/rooms" element={<RoomsPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+
+            <Route path="/admin" element={<AdminRoute />} />
+            <Route path="/room" element={<RoomRoute />} />
+
+            <Route path="*" element={<Navigate to="/rooms" replace />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

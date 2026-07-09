@@ -14,6 +14,7 @@ import { RoomDetailsDialog } from '../components/rooms/RoomDetailsDialog';
 import { RoomsToolbar, type RoomFilters } from '../components/rooms/RoomsToolbar';
 import { mockRooms } from '../data/mockRooms';
 import type { CreateRoomData, Room } from '../types/room';
+import { useNavigate } from 'react-router-dom';
 
 const initialFilters: RoomFilters = {
   mine: false,
@@ -28,6 +29,7 @@ export default function RoomsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [detailsRoom, setDetailsRoom] = useState<Room | null>(null);
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   const filteredRooms = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase();
@@ -53,13 +55,14 @@ export default function RoomsPage() {
       return;
     }
 
+    
     if (room.membership === 'owner') {
-      setMessage('Позже здесь будет переход в админку комнаты.');
+      navigate('/admin');
       return;
     }
 
     if (room.membership === 'member') {
-      setMessage('Позже здесь будет переход на страницу комнаты.');
+      navigate('/room');
     }
   };
 
