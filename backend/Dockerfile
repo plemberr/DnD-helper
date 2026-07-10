@@ -1,5 +1,4 @@
-# общее
-FROM python:3.12-slim as base
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -11,40 +10,32 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY common ./common
-ENV PYTHONPATH=/app
-
-# мигратор
-
-FROM base as migrator
 
 COPY alembic.ini .
 COPY migrations ./migrations
 
+# модули
+COPY auth_service ./auth_service
+COPY room_service ./room_service
+
+# модели алембик
 RUN mkdir -p services_models
-COPY auth-service/app/models ./services_models/auth_service
-COPY room-service/app/models ./services_models/room_service
+
+COPY auth_service/app/models ./services_models/auth_service
+COPY room_service/app/models ./services_models/room_service
 
 RUN touch ./services_models/__init__.py \
-    && find ./services_models -mindepth 1 -maxdepth 1 -type d -exec sh -c 'touch "$1/__init__.py"' _ {} \;
+    && touch services_models/auth_service/__init__.py \
+    && touch services_models/room_service/__init__.py
 
-CMD ["alembic", "upgrade", "head"]
 
-# auth-service
+# запуск процессов
+COPY start.sh .
+RUN chmod +x start.sh
 
-FROM base as auth-service
+ENV PYTHONPATH=/app
 
-COPY auth-service/app ./app
-COPY auth-service/keys ./keys
+EXPOSE 8001
+EXPOSE 8002
 
-EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-# room-service
-
-FROM base as room-service
-
-COPY room-service/app ./app
-COPY room-service/keys ./keys
-
-EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["./start.sh"]
