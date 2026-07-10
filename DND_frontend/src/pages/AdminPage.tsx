@@ -1,19 +1,21 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMutation, useQuery } from '../lib/reactZustandQuery';
 import { Box } from '@mui/material';
 import { AppHeader } from '../components/AppHeader';
 import { DocumentTreeSidebar } from '../components/admin/DocumentTreeSidebar';
 import { DocumentWorkspace } from '../components/admin/DocumentWorkspace';
 import { MediaLibraryPanel } from '../components/admin/MediaLibraryPanel';
 import { MusicLibraryFooter } from '../components/admin/MusicLibraryFooter';
+import { Api } from '../api/Api';
 import {
   documentTree as initialDocumentTree,
-  mediaLibraries,
   musicTracks,
   type FolderNode,
   type MediaItem,
   type MediaType,
   type TextFileNode,
 } from '../data/library';
+import { useMediaLibraryStore } from '../store/mediaLibraryStore';
 import { nodeHelper } from '../utils/nodeHelper';
 
 type AdminPageProps = {
@@ -47,23 +49,6 @@ const fallbackDocument: TextFileNode = {
   links: [],
 };
 
-const createMediaState = () =>
-  Object.fromEntries(
-    Object.entries(mediaLibraries).map(([kind, library]) => [kind, [...library.items]]),
-  ) as Record<MediaType, MediaItem[]>;
-
-function labelForMediaType(kind: MediaType): string {
-  if (kind === 'music') {
-    return 'Музыка';
-  }
-
-  if (kind === 'picture') {
-    return 'Картинка';
-  }
-
-  return 'Звук';
-}
-
 export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [documentRoots, setDocumentRoots] = useState<FolderNode[]>(() => nodeHelper.cloneTree(initialDocumentTree));
@@ -76,10 +61,42 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
   ]);
   const [activeTabId, setActiveTabId] = useState('tab-1');
   const [selectedMediaType, setSelectedMediaType] = useState<MediaType>('music');
-  const [mediaState, setMediaState] = useState<Record<MediaType, MediaItem[]>>(createMediaState);
   const dragStateRef = useRef<DragState>(null);
   const [selectedMusic, setSelectedMusic] = useState(musicTracks[0]);
   const [musicPlaying, setMusicPlaying] = useState(false);
+  const mediaState = useMediaLibraryStore((state) => state.mediaState);
+  const uploadingByType = useMediaLibraryStore((state) => state.uploadingByType);
+  const setMediaState = useMediaLibraryStore((state) => state.setMediaState);
+  const addMediaItem = useMediaLibraryStore((state) => state.addMediaItem);
+  const deleteMediaItem = useMediaLibraryStore((state) => state.deleteMediaItem);
+  const moveMediaItem = useMediaLibraryStore((state) => state.moveMediaItem);
+  const setUploadingState = useMediaLibraryStore((state) => state.setUploadingState);
+
+  const mediaLibraryQuery = useQuery<Record<MediaType, MediaItem[]>>({
+    queryKey: ['media-library'],
+    queryFn: Api.getMediaLibrary,
+    staleTime: 30_000,
+    retry: 1,
+  });
+
+  const uploadMediaMutation = useMutation<
+    { mediaType: MediaType; item: MediaItem },
+    { mediaType: MediaType; file: File }
+  >({
+    mutationFn: async ({ mediaType, file }) => {
+      const uploaded = await Api.uploadMediaFile(mediaType, file);
+      return { mediaType, item: uploaded };
+    },
+    onSuccess: ({ mediaType, item }) => {
+      addMediaItem(mediaType, item);
+    },
+  });
+
+  useEffect(() => {
+    if (mediaLibraryQuery.data) {
+      setMediaState(mediaLibraryQuery.data);
+    }
+  }, [mediaLibraryQuery.data, setMediaState]);
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
   const activeDocument =
@@ -194,33 +211,13 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
     });
   };
 
-  const addMediaItem = (mediaType: MediaType) => {
-    setMediaState((current) => {
-      const next = [...current[mediaType]];
-      const newIndex = next.filter((item) => item.kind === 'file').length + 1;
-      next.push({
-        id: `${mediaType}-${Date.now()}`,
-        name: `${labelForMediaType(mediaType)} файл ${newIndex}`,
-        kind: 'file',
-      });
-      return { ...current, [mediaType]: next };
-    });
-  };
-
-  const deleteMediaItem = (mediaType: MediaType, itemId: string) => {
-    setMediaState((current) => ({
-      ...current,
-      [mediaType]: current[mediaType].filter((item) => item.id !== itemId),
-    }));
-  };
-
-  const moveMediaItem = (mediaType: MediaType, fromIndex: number, toIndex: number) => {
-    setMediaState((current) => {
-      const next = [...current[mediaType]];
-      const [movedItem] = next.splice(fromIndex, 1);
-      next.splice(toIndex, 0, movedItem);
-      return { ...current, [mediaType]: next };
-    });
+  const handleUploadMediaItem = async (mediaType: MediaType, file: File) => {
+    setUploadingState(mediaType, true);
+    try {
+      await uploadMediaMutation.mutate({ mediaType, file });
+    } finally {
+      setUploadingState(mediaType, false);
+    }
   };
 
   const handleRootDrop = (rootId: string, insertIndex: number) => {
@@ -314,9 +311,10 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
 
           <MediaLibraryPanel
             mediaState={mediaState}
+            uploadingByType={uploadingByType}
             viewMode={viewMode}
             onToggleViewMode={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-            onAddMediaItem={addMediaItem}
+            onUploadMediaItem={handleUploadMediaItem}
             onDeleteMediaItem={deleteMediaItem}
             onMediaDragStart={(mediaType, itemId) => updateDragState({ kind: 'media', id: itemId, mediaType })}
             onMediaDragEnd={() => updateDragState(null)}

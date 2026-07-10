@@ -6,14 +6,16 @@ import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import ViewListOutlinedIcon from '@mui/icons-material/ViewListOutlined';
-import { Box, IconButton, Paper, Stack, Typography } from '@mui/material';
+import { useRef } from 'react';
+import { Box, CircularProgress, IconButton, Paper, Stack, Typography } from '@mui/material';
 import { mediaLibraries, type MediaItem, type MediaType } from '../../data/library';
 
 type MediaLibraryPanelProps = {
   mediaState: Record<MediaType, MediaItem[]>;
+  uploadingByType: Record<MediaType, boolean>;
   viewMode: 'list' | 'grid';
   onToggleViewMode: () => void;
-  onAddMediaItem: (mediaType: MediaType) => void;
+  onUploadMediaItem: (mediaType: MediaType, file: File) => Promise<void>;
   onDeleteMediaItem: (mediaType: MediaType, itemId: string) => void;
   onMediaDragStart: (mediaType: MediaType, itemId: string) => void;
   onMediaDragEnd: () => void;
@@ -22,15 +24,27 @@ type MediaLibraryPanelProps = {
 
 export function MediaLibraryPanel({
   mediaState,
+  uploadingByType,
   viewMode,
   onToggleViewMode,
-  onAddMediaItem,
+  onUploadMediaItem,
   onDeleteMediaItem,
   onMediaDragStart,
   onMediaDragEnd,
   onMediaDropAt,
 }: MediaLibraryPanelProps) {
   const orderedMediaTypes: MediaType[] = ['picture', 'sound', 'music'];
+  const inputRefs = useRef<Record<MediaType, HTMLInputElement | null>>({
+    picture: null,
+    sound: null,
+    music: null,
+  });
+
+  const acceptByMediaType: Record<MediaType, string> = {
+    picture: 'image/*',
+    sound: 'audio/*',
+    music: 'audio/*',
+  };
 
   return (
     <Box component="aside" sx={{ width: 340, flexShrink: 0, display: 'flex', flexDirection: 'column', borderLeft: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
@@ -57,8 +71,25 @@ export function MediaLibraryPanel({
                     {mediaType === 'music' && <MusicNoteIcon fontSize="small" />}
                     {mediaType === 'picture' && <ImageOutlinedIcon fontSize="small" />}
                     {mediaType === 'sound' && <GraphicEqOutlinedIcon fontSize="small" />}
-                    <IconButton size="small" onClick={() => onAddMediaItem(mediaType)}>
-                      <AddIcon fontSize="small" />
+                    <input
+                      ref={(element) => {
+                        inputRefs.current[mediaType] = element;
+                      }}
+                      type="file"
+                      accept={acceptByMediaType[mediaType]}
+                      hidden
+                      onChange={async (event) => {
+                        const file = event.target.files?.[0];
+                        if (!file) {
+                          return;
+                        }
+
+                        await onUploadMediaItem(mediaType, file);
+                        event.target.value = '';
+                      }}
+                    />
+                    <IconButton size="small" onClick={() => inputRefs.current[mediaType]?.click()} disabled={uploadingByType[mediaType]}>
+                      {uploadingByType[mediaType] ? <CircularProgress size={14} /> : <AddIcon fontSize="small" />}
                     </IconButton>
                   </Stack>
                 </Stack>
