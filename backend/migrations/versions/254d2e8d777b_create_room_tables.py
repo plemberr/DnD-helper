@@ -1,8 +1,8 @@
 """create room tables
 
-Revision ID: 282bad74fe87
+Revision ID: 254d2e8d777b
 Revises: 81a79eed7128
-Create Date: 2026-07-09 20:54:24.220338
+Create Date: 2026-07-10 07:45:46.290421
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '282bad74fe87'
+revision: str = '254d2e8d777b'
 down_revision: Union[str, Sequence[str], None] = '81a79eed7128'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -48,7 +48,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('character_id', sa.Integer(), nullable=True),
     sa.Column('username', sa.String(length=255), nullable=False),
-    sa.Column('role', sa.Enum('creator', 'master', 'player', name='role'), nullable=False),
+    sa.Column('role', sa.Enum('co_master', 'master', 'player', name='role'), nullable=False),
     sa.Column('joined_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
     sa.ForeignKeyConstraint(['room_id'], ['rooms.id'], ),
     sa.PrimaryKeyConstraint('id')

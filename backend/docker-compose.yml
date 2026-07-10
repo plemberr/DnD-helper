@@ -72,6 +72,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-app_user}:${POSTGRES_PASSWORD:-app_pass}@db:5432/${POSTGRES_DB:-app_db}
       JWT_ALGORITHM: RS256
       JWT_PUBLIC_KEY_PATH: keys/public.pem
+      AUTH_SERVICE_URL: http://auth-service:8000
     volumes:
       - ./room-service/keys:/app/keys:ro
     ports:

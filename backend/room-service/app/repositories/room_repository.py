@@ -1,9 +1,9 @@
 from typing import List, Optional, Sequence, Tuple
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import RoomMember, Rooms, Role
+from app.models import RoomMember, Rooms, Role, JoinRequests
 
 
 # комната по id
@@ -59,6 +59,14 @@ async def update_room(
 
 # удаление комнаты
 async def delete_room(db: AsyncSession, room: Rooms) -> None:
+    await db.execute(
+        delete(RoomMember).where(RoomMember.room_id == room.id)
+    )
+
+    await db.execute(
+        delete(JoinRequests).where(JoinRequests.room_id == room.id)
+    )
+
     await db.delete(room)
     await db.commit()
 

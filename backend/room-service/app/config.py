@@ -12,7 +12,7 @@ class Settings(CommonSettings):
     jwt_algorithm: str = "RS256"
     jwt_public_key_path: str = "keys/public.pem"
 
-    auth_service_url: str = "http://auth-service:8001"
+    auth_service_url: str = "http://auth-service:8000"
     auth_service_timeout_seconds: float = 5.0
 
 

@@ -4,7 +4,7 @@ from enum import StrEnum
 from sqlalchemy import Enum as SAEnum
 
 class Role(StrEnum):
-    creator = 'creator'
+    co_master = 'co_master'
     master = 'master'
     player = 'player'
 
