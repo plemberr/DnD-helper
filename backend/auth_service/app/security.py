@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from passlib.context import CryptContext
 
-from app.config import PRIVATE_KEY, PUBLIC_KEY, settings
+from auth_service.app.config import PRIVATE_KEY, PUBLIC_KEY, settings
 
 # Используем только современный алгоритм Argon2
 pwd_context = CryptContext(schemes=["argon2"])

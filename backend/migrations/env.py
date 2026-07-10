@@ -10,7 +10,8 @@ from common.config import CommonSettings
 from common.db import Base
 
 
-import services_models.auth_service  # noqa: F401,E402
+import services_models.auth_service
+import services_models.room_service
 
 config = context.config
 

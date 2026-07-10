@@ -1,5 +1,5 @@
 from common.db import Base, DatabaseSessionManager
-from app.config import settings
+from auth_service.app.config import settings
 
 db_manager = DatabaseSessionManager(settings.database_url, echo=False)
 

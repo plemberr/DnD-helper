@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import schemas, security
-from app.models import User
-from app.repositories import refresh_token_repository
+from auth_service.app import schemas, security
+from auth_service.app.models import User
+from auth_service.app.repositories import refresh_token_repository
 
 
 async def issue_tokens(

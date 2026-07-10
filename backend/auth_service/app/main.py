@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.routers import auth
+from auth_service.app.routers import auth
 
 app = FastAPI(
     title="Auth Service",

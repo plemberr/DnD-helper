@@ -4,9 +4,9 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import security
-from app.config import settings
-from app.models import RefreshToken
+from auth_service.app import security
+from auth_service.app.config import settings
+from auth_service.app.models import RefreshToken
 
 
 async def create_refresh_token_record(

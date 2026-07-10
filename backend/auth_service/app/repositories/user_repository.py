@@ -3,8 +3,8 @@ from typing import Optional
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import security
-from app.models import User
+from auth_service.app import security
+from auth_service.app.models import User
 
 
 async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[User]:

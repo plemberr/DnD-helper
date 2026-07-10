@@ -17,44 +17,32 @@ services:
       timeout: 5s
       retries: 5
 
-  migrator:
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
-      target: migrator
+    container_name: backend
+    restart: unless-stopped
     volumes:
       - ./migrations:/app/migrations
-    container_name: migrator
+      - ./keys:/app/keys:ro
     depends_on:
       db:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-app_user}:${POSTGRES_PASSWORD:-app_pass}@db:5432/${POSTGRES_DB:-app_db}
-    restart: "no"
 
-  auth-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: auth-service
-    container_name: auth-service
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-      migrator:
-        condition: service_completed_successfully
-    environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-app_user}:${POSTGRES_PASSWORD:-app_pass}@db:5432/${POSTGRES_DB:-app_db}
       JWT_ALGORITHM: RS256
       JWT_PRIVATE_KEY_PATH: keys/private.pem
       JWT_PUBLIC_KEY_PATH: keys/public.pem
       ACCESS_TOKEN_EXPIRE_MINUTES: 15
       REFRESH_TOKEN_EXPIRE_DAYS: 30
-    volumes:
-      - ./auth-service/keys:/app/keys:ro
+
+      AUTH_SERVICE_URL: http://localhost:8001
+
     ports:
-      - "8001:8000"
+      - "8001:8001"
+      - "8002:8002"
 
 volumes:
   app_db_data:
