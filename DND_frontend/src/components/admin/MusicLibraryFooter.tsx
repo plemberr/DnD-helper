@@ -2,6 +2,7 @@ import GraphicEqOutlinedIcon from '@mui/icons-material/GraphicEqOutlined';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { Box, Button, IconButton, Slider, Stack, Typography } from '@mui/material';
 import { musicTracks, soundEffects } from '../../data/library';
 
 type Track = {
@@ -25,49 +26,59 @@ export function MusicLibraryFooter({
 }: MusicLibraryFooterProps) {
   return (
     <>
-      <footer className="flex h-[68px] items-center gap-4 border-t border-[#e2ddd4] bg-white px-5">
-        <span className="w-[60px] font-mono text-[10px] uppercase tracking-wider text-stone-400">Music</span>
-        <button
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-600 text-white shadow-sm transition hover:bg-amber-700"
+      <Box component="footer" sx={{ display: 'flex', alignItems: 'center', gap: 2, px: 2.5, height: 68, borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+        <Typography variant="overline" color="text.secondary" sx={{ width: 60, fontWeight: 700 }}>
+          Music
+        </Typography>
+        <IconButton
           onClick={onToggleMusicPlaying}
+          sx={{ width: 36, height: 36, bgcolor: 'warning.main', color: 'common.white', '&:hover': { bgcolor: 'warning.dark' } }}
         >
           {musicPlaying ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
-        </button>
-        <div className="min-w-0 flex-1">
-          <div className="truncate font-serif text-[13px] text-stone-800">{selectedMusic.title}</div>
-          <input className="mt-2 h-1.5 w-full accent-amber-600" type="range" defaultValue={42} />
-        </div>
-        <div className="font-mono text-[12px] text-stone-400">{selectedMusic.duration}</div>
-      </footer>
+        </IconButton>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography variant="body2" noWrap>
+            {selectedMusic.title}
+          </Typography>
+          <Slider size="small" defaultValue={42} sx={{ mt: 0.75, color: 'warning.main' }} />
+        </Box>
+        <Typography variant="caption" color="text.secondary">
+          {selectedMusic.duration}
+        </Typography>
+      </Box>
 
-      <div className="w-full border-t border-[#e2ddd4] bg-stone-50 px-5 py-3">
-        <div className="flex flex-wrap items-center gap-2 text-[12px]">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-stone-400">Библиотека:</span>
+      <Box sx={{ width: '100%', borderTop: 1, borderColor: 'divider', bgcolor: 'grey.50', px: 2.5, py: 1.5 }}>
+        <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+            Библиотека:
+          </Typography>
           {musicTracks.map((track) => (
-            <button
+            <Button
               key={track.id}
               onClick={() => onSelectTrack(track)}
-              className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] uppercase tracking-wide transition ${
-                selectedMusic.id === track.id
-                  ? 'border-amber-600 bg-amber-600 text-white shadow-sm'
-                  : 'border-amber-200 bg-white text-amber-700 hover:border-amber-400'
-              }`}
+              size="small"
+              variant={selectedMusic.id === track.id ? 'contained' : 'outlined'}
+              color="warning"
+              startIcon={<MusicNoteIcon sx={{ fontSize: 14 }} />}
+              sx={{ borderRadius: 999, textTransform: 'uppercase', fontSize: 11, letterSpacing: 0.5, px: 1.5 }}
             >
-              <MusicNoteIcon sx={{ fontSize: 14 }} />
               {track.title}
-            </button>
+            </Button>
           ))}
           {soundEffects.map((effect) => (
-            <button
+            <Button
               key={effect.id}
-              className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-white px-3 py-1.5 text-[11px] uppercase tracking-wide text-amber-700 transition hover:border-amber-400"
+              size="small"
+              variant="outlined"
+              color="warning"
+              startIcon={<GraphicEqOutlinedIcon sx={{ fontSize: 14 }} />}
+              sx={{ borderRadius: 999, textTransform: 'uppercase', fontSize: 11, letterSpacing: 0.5, px: 1.5 }}
             >
-              <GraphicEqOutlinedIcon sx={{ fontSize: 14 }} />
               {effect.title}
-            </button>
+            </Button>
           ))}
-        </div>
-      </div>
+        </Stack>
+      </Box>
     </>
   );
 }

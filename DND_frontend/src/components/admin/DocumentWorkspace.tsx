@@ -2,6 +2,17 @@ import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
+import {
+  Box,
+  Chip,
+  IconButton,
+  Paper,
+  Stack,
+  Tab,
+  Tabs,
+  TextField,
+  Typography,
+} from '@mui/material';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { TextFileNode } from '../../data/library';
@@ -36,140 +47,159 @@ export function DocumentWorkspace({
   onUpdateTextContent,
 }: DocumentWorkspaceProps) {
   return (
-    <section className="flex min-w-0 flex-1 flex-col border-r border-[#e2ddd4] bg-white">
-      <div className="flex h-10 items-stretch gap-1 border-b border-[#e2ddd4] bg-stone-100 px-2 pt-2 text-[13px]">
-        {tabs.map((tab) => {
-          const isActive = tab.id === activeTabId;
-          const tabDocument = getTabDocument(tab.documentId);
-
-          return (
-            <div
-              key={tab.id}
-              role="button"
-              tabIndex={0}
-              onClick={() => onSetActiveTabId(tab.id)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  onSetActiveTabId(tab.id);
-                }
-              }}
-              className={`flex cursor-pointer items-center gap-2 rounded-t-md border border-b-0 px-4 transition ${
-                isActive
-                  ? 'border-[#e2ddd4] bg-white font-medium text-stone-900 shadow-[0_-1px_0_theme(colors.amber.500)_inset]'
-                  : 'border-transparent text-stone-500 hover:bg-white/60'
-              }`}
-            >
-              <span className="truncate">
-                {tab.title}: {tabDocument.name}
-              </span>
-              <button
-                type="button"
-                aria-label={`Закрыть ${tab.title}`}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onCloseTab(tab.id);
-                }}
-                className="ml-1 rounded-full p-0.5 text-stone-400 hover:bg-stone-200 hover:text-stone-700"
-              >
-                <CloseIcon sx={{ fontSize: 14 }} />
-              </button>
-            </div>
-          );
-        })}
-        <button
-          className="mb-0 rounded-t-md px-3 text-stone-400 transition hover:bg-white/60 hover:text-amber-700"
-          onClick={onOpenNewTab}
-          aria-label="Добавить вкладку"
+    <Box
+      component="section"
+      sx={{
+        minWidth: 0,
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        borderRight: 1,
+        borderColor: 'divider',
+        bgcolor: 'background.paper',
+      }}
+    >
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1, pt: 1, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.100' }}>
+        <Tabs
+          value={activeTabId}
+          onChange={(_, value) => onSetActiveTabId(value)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ minHeight: 38, flex: 1, '& .MuiTab-root': { minHeight: 38, py: 0.5 } }}
         >
-          <AddIcon sx={{ fontSize: 16 }} />
-        </button>
-      </div>
+          {tabs.map((tab) => {
+            const tabDocument = getTabDocument(tab.documentId);
+            return (
+              <Tab
+                key={tab.id}
+                value={tab.id}
+                label={
+                  <Stack direction="row" alignItems="center" spacing={0.5} sx={{ maxWidth: 220 }}>
+                    <Typography variant="body2" noWrap>
+                      {tab.title}: {tabDocument.name}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      aria-label={`Закрыть ${tab.title}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onCloseTab(tab.id);
+                      }}
+                      sx={{ ml: 0.5 }}
+                    >
+                      <CloseIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
+                  </Stack>
+                }
+              />
+            );
+          })}
+        </Tabs>
+        <IconButton onClick={onOpenNewTab} aria-label="Добавить вкладку" size="small">
+          <AddIcon sx={{ fontSize: 18 }} />
+        </IconButton>
+      </Stack>
 
-      <div className="flex min-h-0 flex-1 flex-col px-4 py-4">
-        <div className="mb-4 flex items-center gap-1.5 self-start font-mono text-[11px] uppercase tracking-wide text-stone-500">
-          <FolderOutlinedIcon fontSize="small" />
-          {breadcrumbs.map((crumb, index) => (
-            <span key={crumb} className="flex items-center gap-1.5">
-              <span className="rounded-full border border-stone-300 bg-white px-2.5 py-0.5 normal-case tracking-normal text-stone-600">
-                {crumb}
-              </span>
-              {index < breadcrumbs.length - 1 && <span className="text-stone-300">/</span>}
-            </span>
+      <Box sx={{ p: 2, minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
+          <FolderOutlinedIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
+          {breadcrumbs.map((crumb) => (
+            <Chip key={crumb} size="small" label={crumb} variant="outlined" />
           ))}
-        </div>
-        <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
-          <section className="flex min-h-0 flex-col rounded-lg border border-stone-200 bg-stone-50 p-4">
-            <div className="flex items-center justify-between border-b border-stone-200 pb-2">
-              <div>
-                <div className="text-[14px] font-semibold text-stone-900">{activeDocument.name}</div>
-                <div className="text-[12px] text-stone-500">{activeDocument.summary}</div>
-              </div>
-              <DescriptionOutlinedIcon sx={{ fontSize: 16 }} className="text-amber-600" />
-            </div>
+        </Stack>
 
-            <textarea
-              className="mt-3 min-h-0 flex-1 resize-none rounded-md border border-stone-200 bg-white p-3 font-mono text-[14px] leading-6 text-stone-800 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, minHeight: 0, flex: 1 }}>
+          <Paper variant="outlined" sx={{ p: 2, display: 'flex', minHeight: 0, flexDirection: 'column', bgcolor: 'grey.50' }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ pb: 1, borderBottom: 1, borderColor: 'divider' }}>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="subtitle2" noWrap>
+                  {activeDocument.name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {activeDocument.summary}
+                </Typography>
+              </Box>
+              <DescriptionOutlinedIcon sx={{ color: 'warning.main', fontSize: 18 }} />
+            </Stack>
+
+            <TextField
+              multiline
+              minRows={16}
               value={activeDocument.content}
               onChange={(event) => onUpdateTextContent(activeDocument.id, event.target.value)}
+              sx={{ mt: 2, flex: 1, '& .MuiInputBase-root': { height: '100%', alignItems: 'flex-start' } }}
+              slotProps={{ input: { sx: { fontFamily: 'monospace', fontSize: 14, lineHeight: 1.7 } } }}
             />
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {activeDocument.links?.map((link) => (
-                <span
-                  key={link}
-                  className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-mono text-[11px] text-amber-800"
-                >
-                  <DescriptionOutlinedIcon sx={{ fontSize: 13 }} />
-                  {link}
-                </span>
-              ))}
-            </div>
-          </section>
 
-          <section className="flex min-h-0 flex-col rounded-lg border border-stone-200 bg-white p-4">
-            <div className="border-b border-stone-200 pb-2 text-[13px] font-semibold uppercase tracking-wide text-stone-500">
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 2 }}>
+              {activeDocument.links?.map((link) => (
+                <Chip
+                  key={link}
+                  size="small"
+                  icon={<DescriptionOutlinedIcon sx={{ fontSize: 14 }} />}
+                  label={link}
+                  variant="outlined"
+                  color="warning"
+                />
+              ))}
+            </Stack>
+          </Paper>
+
+          <Paper variant="outlined" sx={{ p: 2, display: 'flex', minHeight: 0, flexDirection: 'column' }}>
+            <Typography variant="overline" color="text.secondary" sx={{ borderBottom: 1, borderColor: 'divider', pb: 1, fontWeight: 700 }}>
               Preview Markdown
-            </div>
-            <div className="mt-3 min-h-0 flex-1 overflow-auto rounded-md border border-stone-100 bg-stone-50 p-4 text-left text-[14px] leading-7 text-stone-800">
+            </Typography>
+            <Box sx={{ mt: 2, p: 2, flex: 1, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1, bgcolor: 'grey.50' }}>
               {activeDocument.content.trim() ? (
-                <article className="space-y-3">
+                <Box component="article" sx={{ '& p': { m: 0, mb: 1.5, color: 'text.primary' } }}>
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
-                      h1: ({ ...props }) => <h1 className="mt-2 text-2xl font-bold text-stone-900" {...props} />,
-                      h2: ({ ...props }) => <h2 className="mt-2 text-xl font-semibold text-stone-900" {...props} />,
-                      h3: ({ ...props }) => <h3 className="mt-1 text-lg font-semibold text-stone-900" {...props} />,
-                      p: ({ ...props }) => <p className="text-stone-800" {...props} />,
-                      a: ({ ...props }) => <a className="text-amber-700 underline decoration-amber-500/50" {...props} />,
+                      h1: ({ ...props }) => <Typography variant="h4" sx={{ mt: 1, mb: 1 }} {...props} />,
+                      h2: ({ ...props }) => <Typography variant="h5" sx={{ mt: 1, mb: 1 }} {...props} />,
+                      h3: ({ ...props }) => <Typography variant="h6" sx={{ mt: 1, mb: 1 }} {...props} />,
+                      p: ({ ...props }) => <Typography variant="body1" {...props} />,
+                      a: ({ ...props }) => <Box component="a" sx={{ color: 'warning.dark' }} {...props} />,
                       code: ({ ...props }) => (
-                        <code className="rounded bg-stone-200 px-1.5 py-0.5 font-mono text-[13px] text-stone-900" {...props} />
+                        <Box component="code" sx={{ px: 0.75, py: 0.25, borderRadius: 0.5, bgcolor: 'grey.200', fontFamily: 'monospace', fontSize: 13 }} {...props} />
                       ),
                       pre: ({ ...props }) => (
-                        <pre
-                          className="overflow-auto rounded-md bg-stone-900 p-3 font-mono text-[13px] text-stone-100 [&>code]:bg-transparent [&>code]:p-0"
+                        <Box
+                          component="pre"
+                          sx={{
+                            overflow: 'auto',
+                            p: 1.5,
+                            borderRadius: 1,
+                            bgcolor: 'grey.900',
+                            color: 'grey.100',
+                            fontFamily: 'monospace',
+                            fontSize: 13,
+                          }}
                           {...props}
                         />
                       ),
-                      ul: ({ ...props }) => <ul className="list-disc space-y-1 pl-6" {...props} />,
-                      ol: ({ ...props }) => <ol className="list-decimal space-y-1 pl-6" {...props} />,
+                      ul: ({ ...props }) => <Box component="ul" sx={{ pl: 3, mb: 1.5 }} {...props} />,
+                      ol: ({ ...props }) => <Box component="ol" sx={{ pl: 3, mb: 1.5 }} {...props} />,
                       blockquote: ({ ...props }) => (
-                        <blockquote className="border-l-4 border-amber-300 pl-3 italic text-stone-600" {...props} />
+                        <Box component="blockquote" sx={{ pl: 1.5, ml: 0, borderLeft: 3, borderColor: 'warning.light', fontStyle: 'italic', color: 'text.secondary' }} {...props} />
                       ),
-                      table: ({ ...props }) => <table className="w-full border-collapse text-[13px]" {...props} />,
-                      th: ({ ...props }) => <th className="border border-stone-300 bg-stone-100 px-2 py-1 text-left" {...props} />,
-                      td: ({ ...props }) => <td className="border border-stone-200 px-2 py-1 align-top" {...props} />,
+                      table: ({ ...props }) => <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }} {...props} />,
+                      th: ({ ...props }) => <Box component="th" sx={{ border: 1, borderColor: 'divider', bgcolor: 'grey.100', px: 1, py: 0.5, textAlign: 'left' }} {...props} />,
+                      td: ({ ...props }) => <Box component="td" sx={{ border: 1, borderColor: 'divider', px: 1, py: 0.5, verticalAlign: 'top' }} {...props} />,
                     }}
                   >
                     {activeDocument.content}
                   </ReactMarkdown>
-                </article>
+                </Box>
               ) : (
-                <p className="text-stone-400">Введите markdown-текст слева, чтобы увидеть превью.</p>
+                <Typography variant="body2" color="text.secondary">
+                  Введите markdown-текст слева, чтобы увидеть превью.
+                </Typography>
               )}
-            </div>
-          </section>
-        </div>
-      </div>
-    </section>
+            </Box>
+          </Paper>
+        </Box>
+      </Box>
+    </Box>
   );
 }

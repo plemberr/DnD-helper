@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { Box } from '@mui/material';
 import { AppHeader } from '../components/AppHeader';
 import { DocumentTreeSidebar } from '../components/admin/DocumentTreeSidebar';
 import { DocumentWorkspace } from '../components/admin/DocumentWorkspace';
@@ -277,13 +278,11 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-[#f3efe8] text-stone-800">
-      
-
-      <div className="flex flex-1 flex-col">
+    <Box sx={{ display: 'flex', minHeight: '100vh', width: '100%', flexDirection: 'column', overflowX: 'hidden', bgcolor: 'grey.100', color: 'text.primary' }}>
+      <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
         <AppHeader isRoomScreen={false} onOpenAdmin={onOpenAdmin} onOpenRoom={onOpenRoom} />
 
-        <main className="flex min-h-0 flex-1 w-full">
+        <Box component="main" sx={{ display: 'flex', minHeight: 0, flex: 1, width: '100%' }}>
           <DocumentTreeSidebar
             documentRoots={documentRoots}
             expandedFolders={expandedFolders}
@@ -323,7 +322,7 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
             onMediaDragEnd={() => updateDragState(null)}
             onMediaDropAt={handleMediaDropAt}
           />
-        </main>
+        </Box>
 
         <MusicLibraryFooter
           selectedMusic={selectedMusic}
@@ -331,7 +330,7 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
           onToggleMusicPlaying={() => setMusicPlaying((value) => !value)}
           onSelectTrack={setSelectedMusic}
         />
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }
