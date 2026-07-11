@@ -29,6 +29,8 @@ export type MediaItem = {
   id: string;
   name: string;
   kind: 'folder' | 'file';
+  fileUrl?: string;
+  mimeType?: string;
 };
 
 export const documentTree: FolderNode[] = [
@@ -149,14 +151,3 @@ export const mediaLibraries: Record<
   },
 };
 
-export const musicTracks = [
-  { id: 't1', title: 'Ancient Tavern Loop', duration: '03:42' },
-  { id: 't2', title: 'Dungeon Ambient', duration: '05:18' },
-  { id: 't3', title: 'Boss Encounter', duration: '04:06' },
-];
-
-export const soundEffects = [
-  { id: 's1', title: 'Sword Slash', duration: '00:02' },
-  { id: 's2', title: 'Coin Drop', duration: '00:01' },
-  { id: 's3', title: 'Monster Roar', duration: '00:03' },
-];

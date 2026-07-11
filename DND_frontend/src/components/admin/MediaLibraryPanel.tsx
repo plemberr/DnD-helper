@@ -6,39 +6,86 @@ import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import ViewListOutlinedIcon from '@mui/icons-material/ViewListOutlined';
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box, CircularProgress, IconButton, Paper, Stack, Typography } from '@mui/material';
+import { useMutation, useQuery } from '../../lib/reactZustandQuery';
+import { Api } from '../../api/Api';
 import { mediaLibraries, type MediaItem, type MediaType } from '../../data/library';
+import { useMediaLibraryStore } from '../../store/mediaLibraryStore';
 
-type MediaLibraryPanelProps = {
-  mediaState: Record<MediaType, MediaItem[]>;
-  uploadingByType: Record<MediaType, boolean>;
-  viewMode: 'list' | 'grid';
-  onToggleViewMode: () => void;
-  onUploadMediaItem: (mediaType: MediaType, file: File) => Promise<void>;
-  onDeleteMediaItem: (mediaType: MediaType, itemId: string) => void;
-  onMediaDragStart: (mediaType: MediaType, itemId: string) => void;
-  onMediaDragEnd: () => void;
-  onMediaDropAt: (mediaType: MediaType, index: number) => void;
-};
+type MediaDragState = {
+  mediaType: MediaType;
+  itemId: string;
+} | null;
 
-export function MediaLibraryPanel({
-  mediaState,
-  uploadingByType,
-  viewMode,
-  onToggleViewMode,
-  onUploadMediaItem,
-  onDeleteMediaItem,
-  onMediaDragStart,
-  onMediaDragEnd,
-  onMediaDropAt,
-}: MediaLibraryPanelProps) {
+export function MediaLibraryPanel() {
   const orderedMediaTypes: MediaType[] = ['picture', 'sound', 'music'];
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const inputRefs = useRef<Record<MediaType, HTMLInputElement | null>>({
     picture: null,
     sound: null,
     music: null,
   });
+  const mediaDragRef = useRef<MediaDragState>(null);
+  const mediaState = useMediaLibraryStore((state) => state.mediaState);
+  const uploadingByType = useMediaLibraryStore((state) => state.uploadingByType);
+  const selectedMediaPreview = useMediaLibraryStore((state) => state.selectedMediaPreview);
+  const setMediaState = useMediaLibraryStore((state) => state.setMediaState);
+  const addMediaItem = useMediaLibraryStore((state) => state.addMediaItem);
+  const deleteMediaItem = useMediaLibraryStore((state) => state.deleteMediaItem);
+  const moveMediaItem = useMediaLibraryStore((state) => state.moveMediaItem);
+  const selectMediaItem = useMediaLibraryStore((state) => state.selectMediaItem);
+  const setUploadingState = useMediaLibraryStore((state) => state.setUploadingState);
+
+  const mediaLibraryQuery = useQuery<Record<MediaType, MediaItem[]>>({
+    queryKey: ['media-library'],
+    queryFn: Api.getMediaLibrary,
+    staleTime: 30_000,
+    retry: 1,
+  });
+
+  const uploadMediaMutation = useMutation<
+    { mediaType: MediaType; item: MediaItem },
+    { mediaType: MediaType; file: File }
+  >({
+    mutationFn: async ({ mediaType, file }) => {
+      const uploaded = await Api.uploadMediaFile(mediaType, file);
+      return { mediaType, item: uploaded };
+    },
+    onSuccess: ({ mediaType, item }) => {
+      addMediaItem(mediaType, item);
+      selectMediaItem(mediaType, item);
+    },
+  });
+
+  useEffect(() => {
+    if (mediaLibraryQuery.data) {
+      setMediaState(mediaLibraryQuery.data);
+    }
+  }, [mediaLibraryQuery.data, setMediaState]);
+
+  const handleUploadMediaItem = async (mediaType: MediaType, file: File) => {
+    setUploadingState(mediaType, true);
+    try {
+      await uploadMediaMutation.mutate({ mediaType, file });
+    } finally {
+      setUploadingState(mediaType, false);
+    }
+  };
+
+  const handleMediaDropAt = (mediaType: MediaType, index: number) => {
+    const dragged = mediaDragRef.current;
+    if (!dragged || dragged.mediaType !== mediaType) {
+      return;
+    }
+
+    const fromIndex = mediaState[mediaType].findIndex((entry) => entry.id === dragged.itemId);
+    if (fromIndex !== -1 && fromIndex !== index) {
+      moveMediaItem(mediaType, fromIndex, index);
+    }
+
+    mediaDragRef.current = null;
+  };
 
   const acceptByMediaType: Record<MediaType, string> = {
     picture: 'image/*',
@@ -52,7 +99,7 @@ export function MediaLibraryPanel({
         <Typography variant="subtitle1" sx={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>
           Библиотека медиа файлов
         </Typography>
-        <IconButton size="small" onClick={onToggleViewMode}>
+        <IconButton size="small" onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}>
           {viewMode === 'list' ? <ViewListOutlinedIcon fontSize="small" /> : <GridViewOutlinedIcon fontSize="small" />}
         </IconButton>
       </Stack>
@@ -84,7 +131,7 @@ export function MediaLibraryPanel({
                           return;
                         }
 
-                        await onUploadMediaItem(mediaType, file);
+                        await handleUploadMediaItem(mediaType, file);
                         event.target.value = '';
                       }}
                     />
@@ -100,10 +147,15 @@ export function MediaLibraryPanel({
                       <Box
                         key={item.id}
                         draggable
-                        onDragStart={() => onMediaDragStart(mediaType, item.id)}
-                        onDragEnd={onMediaDragEnd}
+                        onClick={() => selectMediaItem(mediaType, item)}
+                        onDragStart={() => {
+                          mediaDragRef.current = { mediaType, itemId: item.id };
+                        }}
+                        onDragEnd={() => {
+                          mediaDragRef.current = null;
+                        }}
                         onDragOver={(event) => event.preventDefault()}
-                        onDrop={() => onMediaDropAt(mediaType, index)}
+                        onDrop={() => handleMediaDropAt(mediaType, index)}
                         sx={{
                           display: 'flex',
                           alignItems: 'center',
@@ -112,8 +164,9 @@ export function MediaLibraryPanel({
                           py: 0.75,
                           borderRadius: 1,
                           border: 1,
-                          borderColor: 'divider',
-                          bgcolor: 'grey.50',
+                          borderColor: selectedMediaPreview?.item.id === item.id ? 'warning.main' : 'divider',
+                          bgcolor: selectedMediaPreview?.item.id === item.id ? 'rgba(255, 167, 38, 0.12)' : 'grey.50',
+                          cursor: 'pointer',
                           '&:hover': { borderColor: 'warning.light' },
                         }}
                       >
@@ -121,7 +174,14 @@ export function MediaLibraryPanel({
                         <Typography variant="body2" noWrap sx={{ flex: 1 }}>
                           {item.name}
                         </Typography>
-                        <IconButton size="small" onClick={() => onDeleteMediaItem(mediaType, item.id)} aria-label="Удалить">
+                        <IconButton
+                          size="small"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            deleteMediaItem(mediaType, item.id);
+                          }}
+                          aria-label="Удалить"
+                        >
                           <DeleteOutlineIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Box>
@@ -133,10 +193,15 @@ export function MediaLibraryPanel({
                       <Box
                         key={item.id}
                         draggable
-                        onDragStart={() => onMediaDragStart(mediaType, item.id)}
-                        onDragEnd={onMediaDragEnd}
+                        onClick={() => selectMediaItem(mediaType, item)}
+                        onDragStart={() => {
+                          mediaDragRef.current = { mediaType, itemId: item.id };
+                        }}
+                        onDragEnd={() => {
+                          mediaDragRef.current = null;
+                        }}
                         onDragOver={(event) => event.preventDefault()}
-                        onDrop={() => onMediaDropAt(mediaType, index)}
+                        onDrop={() => handleMediaDropAt(mediaType, index)}
                         sx={{
                           display: 'flex',
                           alignItems: 'center',
@@ -145,8 +210,9 @@ export function MediaLibraryPanel({
                           py: 1,
                           borderRadius: 1,
                           border: 1,
-                          borderColor: 'divider',
-                          bgcolor: 'grey.50',
+                          borderColor: selectedMediaPreview?.item.id === item.id ? 'warning.main' : 'divider',
+                          bgcolor: selectedMediaPreview?.item.id === item.id ? 'rgba(255, 167, 38, 0.12)' : 'grey.50',
+                          cursor: 'pointer',
                           '&:hover': { borderColor: 'warning.light' },
                         }}
                       >
@@ -154,7 +220,14 @@ export function MediaLibraryPanel({
                         <Typography variant="body2" noWrap sx={{ flex: 1 }}>
                           {item.name}
                         </Typography>
-                        <IconButton size="small" onClick={() => onDeleteMediaItem(mediaType, item.id)} aria-label="Удалить">
+                        <IconButton
+                          size="small"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            deleteMediaItem(mediaType, item.id);
+                          }}
+                          aria-label="Удалить"
+                        >
                           <DeleteOutlineIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Box>

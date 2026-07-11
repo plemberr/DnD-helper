@@ -39,6 +39,8 @@ export const Api = {
       id: `${mediaType}-${Date.now()}`,
       name: file.name,
       kind: 'file',
+      fileUrl: URL.createObjectURL(file),
+      mimeType: file.type,
     };
 
     mediaStorage[mediaType] = [...mediaStorage[mediaType], nextItem];

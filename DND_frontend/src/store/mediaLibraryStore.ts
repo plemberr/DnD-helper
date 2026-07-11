@@ -9,11 +9,17 @@ const createMediaState = (): Record<MediaType, MediaItem[]> =>
 type MediaLibraryStore = {
   mediaState: Record<MediaType, MediaItem[]>;
   uploadingByType: Record<MediaType, boolean>;
+  selectedMediaPreview: {
+    mediaType: MediaType;
+    item: MediaItem;
+  } | null;
   setMediaState: (nextState: Record<MediaType, MediaItem[]>) => void;
   addMediaItem: (mediaType: MediaType, item: MediaItem) => void;
   deleteMediaItem: (mediaType: MediaType, itemId: string) => void;
   moveMediaItem: (mediaType: MediaType, fromIndex: number, toIndex: number) => void;
   setUploadingState: (mediaType: MediaType, value: boolean) => void;
+  selectMediaItem: (mediaType: MediaType, item: MediaItem) => void;
+  clearMediaSelection: () => void;
 };
 
 export const useMediaLibraryStore = create<MediaLibraryStore>((set) => ({
@@ -23,6 +29,7 @@ export const useMediaLibraryStore = create<MediaLibraryStore>((set) => ({
     sound: false,
     music: false,
   },
+  selectedMediaPreview: null,
   setMediaState: (nextState) => set({ mediaState: nextState }),
   addMediaItem: (mediaType, item) =>
     set((state) => ({
@@ -37,6 +44,10 @@ export const useMediaLibraryStore = create<MediaLibraryStore>((set) => ({
         ...state.mediaState,
         [mediaType]: state.mediaState[mediaType].filter((item) => item.id !== itemId),
       },
+      selectedMediaPreview:
+        state.selectedMediaPreview?.mediaType === mediaType && state.selectedMediaPreview.item.id === itemId
+          ? null
+          : state.selectedMediaPreview,
     })),
   moveMediaItem: (mediaType, fromIndex, toIndex) =>
     set((state) => {
@@ -58,4 +69,11 @@ export const useMediaLibraryStore = create<MediaLibraryStore>((set) => ({
         [mediaType]: value,
       },
     })),
+  selectMediaItem: (mediaType, item) => {
+    if (item.kind === 'folder') {
+      return;
+    }
+    set({ selectedMediaPreview: { mediaType, item } });
+  },
+  clearMediaSelection: () => set({ selectedMediaPreview: null }),
 }));

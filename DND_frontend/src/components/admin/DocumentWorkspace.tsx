@@ -2,6 +2,8 @@ import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
+import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
+import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import {
   Box,
   Chip,
@@ -13,9 +15,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import type { TextFileNode } from '../../data/library';
+import { useMediaLibraryStore } from '../../store/mediaLibraryStore';
 
 type TabState = {
   id: string;
@@ -46,6 +47,59 @@ export function DocumentWorkspace({
   onOpenNewTab,
   onUpdateTextContent,
 }: DocumentWorkspaceProps) {
+  const selectedMediaPreview = useMediaLibraryStore((state) => state.selectedMediaPreview);
+
+  const renderMediaPreview = () => {
+    if (!selectedMediaPreview || selectedMediaPreview.item.kind === 'folder') {
+      return (
+        <Typography variant="body2" color="text.secondary">
+          Выберите файл в правой библиотеке, чтобы показать картинку или открыть аудиоплеер.
+        </Typography>
+      );
+    }
+
+    if (selectedMediaPreview.mediaType === 'picture') {
+      if (!selectedMediaPreview.item.fileUrl) {
+        return (
+          <Typography variant="body2" color="text.secondary">
+            Для предпросмотра картинки загрузите файл через кнопку "+" в библиотеке.
+          </Typography>
+        );
+      }
+
+      return (
+        <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 1 }}>
+          <Box
+            component="img"
+            src={selectedMediaPreview.item.fileUrl}
+            alt={selectedMediaPreview.item.name}
+            sx={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 1 }}
+          />
+        </Box>
+      );
+    }
+
+    if (!selectedMediaPreview.item.fileUrl) {
+      return (
+        <Typography variant="body2" color="text.secondary">
+          Для воспроизведения аудио загрузите музыкальный файл или звук через библиотеку справа.
+        </Typography>
+      );
+    }
+
+    return (
+      <Stack spacing={2} sx={{ width: '100%', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+        <Typography variant="subtitle2">{selectedMediaPreview.item.name}</Typography>
+        <Box
+          component="audio"
+          controls
+          src={selectedMediaPreview.item.fileUrl}
+          sx={{ width: '100%', maxWidth: 520 }}
+        />
+      </Stack>
+    );
+  };
+
   return (
     <Box
       component="section"
@@ -146,56 +200,35 @@ export function DocumentWorkspace({
           </Paper>
 
           <Paper variant="outlined" sx={{ p: 2, display: 'flex', minHeight: 0, flexDirection: 'column' }}>
-            <Typography variant="overline" color="text.secondary" sx={{ borderBottom: 1, borderColor: 'divider', pb: 1, fontWeight: 700 }}>
-              Preview Markdown
-            </Typography>
-            <Box sx={{ mt: 2, p: 2, flex: 1, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1, bgcolor: 'grey.50' }}>
-              {activeDocument.content.trim() ? (
-                <Box component="article" sx={{ '& p': { m: 0, mb: 1.5, color: 'text.primary' } }}>
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      h1: ({ ...props }) => <Typography variant="h4" sx={{ mt: 1, mb: 1 }} {...props} />,
-                      h2: ({ ...props }) => <Typography variant="h5" sx={{ mt: 1, mb: 1 }} {...props} />,
-                      h3: ({ ...props }) => <Typography variant="h6" sx={{ mt: 1, mb: 1 }} {...props} />,
-                      p: ({ ...props }) => <Typography variant="body1" {...props} />,
-                      a: ({ ...props }) => <Box component="a" sx={{ color: 'warning.dark' }} {...props} />,
-                      code: ({ ...props }) => (
-                        <Box component="code" sx={{ px: 0.75, py: 0.25, borderRadius: 0.5, bgcolor: 'grey.200', fontFamily: 'monospace', fontSize: 13 }} {...props} />
-                      ),
-                      pre: ({ ...props }) => (
-                        <Box
-                          component="pre"
-                          sx={{
-                            overflow: 'auto',
-                            p: 1.5,
-                            borderRadius: 1,
-                            bgcolor: 'grey.900',
-                            color: 'grey.100',
-                            fontFamily: 'monospace',
-                            fontSize: 13,
-                          }}
-                          {...props}
-                        />
-                      ),
-                      ul: ({ ...props }) => <Box component="ul" sx={{ pl: 3, mb: 1.5 }} {...props} />,
-                      ol: ({ ...props }) => <Box component="ol" sx={{ pl: 3, mb: 1.5 }} {...props} />,
-                      blockquote: ({ ...props }) => (
-                        <Box component="blockquote" sx={{ pl: 1.5, ml: 0, borderLeft: 3, borderColor: 'warning.light', fontStyle: 'italic', color: 'text.secondary' }} {...props} />
-                      ),
-                      table: ({ ...props }) => <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }} {...props} />,
-                      th: ({ ...props }) => <Box component="th" sx={{ border: 1, borderColor: 'divider', bgcolor: 'grey.100', px: 1, py: 0.5, textAlign: 'left' }} {...props} />,
-                      td: ({ ...props }) => <Box component="td" sx={{ border: 1, borderColor: 'divider', px: 1, py: 0.5, verticalAlign: 'top' }} {...props} />,
-                    }}
-                  >
-                    {activeDocument.content}
-                  </ReactMarkdown>
-                </Box>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+              {selectedMediaPreview?.mediaType === 'picture' ? (
+                <ImageOutlinedIcon sx={{ color: 'warning.main', fontSize: 18 }} />
               ) : (
-                <Typography variant="body2" color="text.secondary">
-                  Введите markdown-текст слева, чтобы увидеть превью.
-                </Typography>
+                <MusicNoteIcon sx={{ color: 'warning.main', fontSize: 18 }} />
               )}
+              <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+                Центральный предпросмотр медиа
+              </Typography>
+            </Stack>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+              {selectedMediaPreview ? selectedMediaPreview.item.name : 'Файл не выбран'}
+            </Typography>
+            <Box
+              sx={{
+                mt: 2,
+                p: 2,
+                flex: 1,
+                overflow: 'auto',
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 1,
+                bgcolor: 'grey.50',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {renderMediaPreview()}
             </Box>
           </Paper>
         </Box>
