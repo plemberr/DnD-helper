@@ -11,7 +11,7 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { Box, IconButton, Stack, Typography } from '@mui/material';
 import type { FolderNode, MediaType, TreeNode } from '../../data/library';
 
-type SidebarDragKind = 'folder' | 'document' | 'media';
+type SidebarDragKind = 'folder' | 'document';
 
 type SidebarDragState =
   | {

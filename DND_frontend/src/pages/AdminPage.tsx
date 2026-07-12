@@ -7,10 +7,7 @@ import { MediaLibraryPanel } from '../components/admin/MediaLibraryPanel';
 import { MusicLibraryFooter } from '../components/admin/MusicLibraryFooter';
 import {
   documentTree as initialDocumentTree,
-  mediaLibraries,
-  musicTracks,
   type FolderNode,
-  type MediaItem,
   type MediaType,
   type TextFileNode,
 } from '../data/library';
@@ -27,14 +24,13 @@ type TabState = {
   documentId: string;
 };
 
-type DragKind = 'folder' | 'document' | 'media';
+type DragKind = 'folder' | 'document';
 
 type DragState =
   | {
       kind: DragKind;
       id: string;
       sourceFolderId?: string;
-      mediaType?: MediaType;
     }
   | null;
 
@@ -47,25 +43,7 @@ const fallbackDocument: TextFileNode = {
   links: [],
 };
 
-const createMediaState = () =>
-  Object.fromEntries(
-    Object.entries(mediaLibraries).map(([kind, library]) => [kind, [...library.items]]),
-  ) as Record<MediaType, MediaItem[]>;
-
-function labelForMediaType(kind: MediaType): string {
-  if (kind === 'music') {
-    return 'Музыка';
-  }
-
-  if (kind === 'picture') {
-    return 'Картинка';
-  }
-
-  return 'Звук';
-}
-
 export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [documentRoots, setDocumentRoots] = useState<FolderNode[]>(() => nodeHelper.cloneTree(initialDocumentTree));
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>(
     Object.fromEntries(initialDocumentTree.map((node) => [node.id, true])),
@@ -76,10 +54,7 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
   ]);
   const [activeTabId, setActiveTabId] = useState('tab-1');
   const [selectedMediaType, setSelectedMediaType] = useState<MediaType>('music');
-  const [mediaState, setMediaState] = useState<Record<MediaType, MediaItem[]>>(createMediaState);
   const dragStateRef = useRef<DragState>(null);
-  const [selectedMusic, setSelectedMusic] = useState(musicTracks[0]);
-  const [musicPlaying, setMusicPlaying] = useState(false);
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
   const activeDocument =
@@ -194,54 +169,12 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
     });
   };
 
-  const addMediaItem = (mediaType: MediaType) => {
-    setMediaState((current) => {
-      const next = [...current[mediaType]];
-      const newIndex = next.filter((item) => item.kind === 'file').length + 1;
-      next.push({
-        id: `${mediaType}-${Date.now()}`,
-        name: `${labelForMediaType(mediaType)} файл ${newIndex}`,
-        kind: 'file',
-      });
-      return { ...current, [mediaType]: next };
-    });
-  };
-
-  const deleteMediaItem = (mediaType: MediaType, itemId: string) => {
-    setMediaState((current) => ({
-      ...current,
-      [mediaType]: current[mediaType].filter((item) => item.id !== itemId),
-    }));
-  };
-
-  const moveMediaItem = (mediaType: MediaType, fromIndex: number, toIndex: number) => {
-    setMediaState((current) => {
-      const next = [...current[mediaType]];
-      const [movedItem] = next.splice(fromIndex, 1);
-      next.splice(toIndex, 0, movedItem);
-      return { ...current, [mediaType]: next };
-    });
-  };
-
   const handleRootDrop = (rootId: string, insertIndex: number) => {
     const currentDrag = dragStateRef.current;
     if (currentDrag?.kind === 'document') {
       moveNodeToFolder(currentDrag.id, rootId, insertIndex);
       updateDragState(null);
     }
-  };
-
-  const handleMediaDropAt = (mediaType: MediaType, index: number) => {
-    const dragged = dragStateRef.current;
-    if (dragged?.kind !== 'media' || dragged.mediaType !== mediaType) {
-      return;
-    }
-
-    const fromIndex = mediaState[mediaType].findIndex((entry) => entry.id === dragged.id);
-    if (fromIndex !== -1 && fromIndex !== index) {
-      moveMediaItem(mediaType, fromIndex, index);
-    }
-    updateDragState(null);
   };
 
   const getTabDocument = (documentId: string): TextFileNode => nodeHelper.findTextFileById(documentRoots, documentId) ?? activeDocument;
@@ -312,24 +245,10 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
             onUpdateTextContent={updateTextContent}
           />
 
-          <MediaLibraryPanel
-            mediaState={mediaState}
-            viewMode={viewMode}
-            onToggleViewMode={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-            onAddMediaItem={addMediaItem}
-            onDeleteMediaItem={deleteMediaItem}
-            onMediaDragStart={(mediaType, itemId) => updateDragState({ kind: 'media', id: itemId, mediaType })}
-            onMediaDragEnd={() => updateDragState(null)}
-            onMediaDropAt={handleMediaDropAt}
-          />
+          <MediaLibraryPanel />
         </Box>
 
-        <MusicLibraryFooter
-          selectedMusic={selectedMusic}
-          musicPlaying={musicPlaying}
-          onToggleMusicPlaying={() => setMusicPlaying((value) => !value)}
-          onSelectTrack={setSelectedMusic}
-        />
+        <MusicLibraryFooter />
       </Box>
     </Box>
   );
