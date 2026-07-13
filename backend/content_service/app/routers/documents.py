@@ -40,7 +40,7 @@ async def create_document(
 
 @router.get(
     "/document-folders/{folder_id}/documents",
-    response_model=schemas.Page[schemas.DocumentListItem],
+    response_model=list[schemas.DocumentListItem],
 )
 async def list_documents_in_folder(
     folder_id: int,
@@ -52,14 +52,13 @@ async def list_documents_in_folder(
     :param folder_id: id папки документов
     :param user_id: id текущего пользователя (подставляется из токена)
     :param db: сессия БД
-    :return: страница со списком документов (Page[DocumentListItem])
+    :return: список документов (list[DocumentListItem])
     """
     folder = await folders_repository.get_by_id(db, folder_id)
     if folder is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Папка не найдена")
 
-    items = await documents_repository.list_by_folder(db, folder_id)
-    return schemas.Page(items=items, total=len(items))
+    return await documents_repository.list_by_folder(db, folder_id)
 
 
 @router.get("/documents/{documents_id}", response_model=schemas.DocumentOut)

@@ -29,7 +29,7 @@ COPY content_service/app/models ./services_models/content_service
 RUN touch ./services_models/__init__.py \
     && touch ./services_models/auth_service/__init__.py \
     && touch ./services_models/room_service/__init__.py \
-    && touch ./services_models/content_service/__init__.py \
+    && touch ./services_models/content_service/__init__.py
 
 # запуск процессов
 COPY start.sh .

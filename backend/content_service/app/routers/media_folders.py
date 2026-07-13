@@ -33,7 +33,7 @@ async def create_media_folder(
 
 @router.get(
     "/rooms/{room_id}/media-folders",
-    response_model=schemas.Page[schemas.MediaFolderOut],
+    response_model=list[schemas.MediaFolderOut],
 )
 async def list_media_folders(
     room_id: int,
@@ -45,10 +45,9 @@ async def list_media_folders(
     :param room_id: id комнаты
     :param user_id: id текущего пользователя (подставляется из токена, должен быть мастером комнаты)
     :param db: сессия БД
-    :return: страница со списком медиапапок (Page[MediaFolderOut])
+    :return: список медиапапок (list[MediaFolderOut])
     """
-    items = await media_folders_repository.list_by_room(db, room_id)
-    return schemas.Page(items=items, total=len(items))
+    return await media_folders_repository.list_by_room(db, room_id)
 
 
 @router.patch(

@@ -18,6 +18,16 @@ async def global_search(
     user_id: int = Depends(require_room_master),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Выполняет поиск по документам и/или медиафайлам комнаты (доступно только мастеру комнаты).
+    :param room_id: id комнаты, в которой выполняется поиск
+    :param q: поисковая строка
+    :param type: если передан "documents"/"media", то искать только среди этого типа сущностей,
+    если не передан, то искать среди обоих типов
+    :param user_id: id текущего пользователя (подставляется из токена, должен быть мастером комнаты)
+    :param db: сессия БД
+    :return: список найденных результатов (list[SearchResultItem])
+    """
     results: list[schemas.SearchResultItem] = []
 
     if type in (None, "documents"):

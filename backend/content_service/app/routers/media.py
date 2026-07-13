@@ -89,7 +89,7 @@ async def upload_image(
     return await _to_media_out(db, media, user_id)
 
 
-@router.get("/rooms/{room_id}/media/images", response_model=schemas.Page[schemas.MediaFileOut])
+@router.get("/rooms/{room_id}/media/images", response_model=list[schemas.MediaFileOut])
 async def list_images(
     room_id: int,
     folder_id: int | None = None,
@@ -108,13 +108,13 @@ async def list_images(
     :param favorites_only: если True, то вернуть только избранные изображения текущего пользователя
     :param user_id: id текущего пользователя (подставляется из токена, должен быть мастером комнаты)
     :param db: сессия БД
-    :return: страница со списком изображений (Page[MediaFileOut])
+    :return: список изображений (list[MediaFileOut])
     """
     items = await media_files_repository.list_by_room(db, room_id, Type.image, folder_id, tags, search)
     out = [await _to_media_out(db, m, user_id) for m in items]
     if favorites_only:
         out = [m for m in out if m.is_favorite]
-    return schemas.Page(items=out, total=len(out))
+    return out
 
 
 @router.delete("/media/images/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -188,7 +188,7 @@ async def upload_audio(
     return await _to_media_out(db, media, user_id)
 
 
-@router.get("/rooms/{room_id}/media/audio", response_model=schemas.Page[schemas.MediaFileOut])
+@router.get("/rooms/{room_id}/media/audio", response_model=list[schemas.MediaFileOut])
 async def list_audio(
     room_id: int,
     folder_id: int | None = None,
@@ -205,11 +205,10 @@ async def list_audio(
     :param search: подстрока для поиска по названию файла
     :param user_id: id текущего пользователя (подставляется из токена, должен быть мастером комнаты)
     :param db: сессия БД
-    :return: страница со списком аудиофайлов (Page[MediaFileOut])
+    :return: список аудиофайлов (list[MediaFileOut])
     """
     items = await media_files_repository.list_by_room(db, room_id, Type.audio, folder_id, tags, search)
-    out = [await _to_media_out(db, m, user_id) for m in items]
-    return schemas.Page(items=out, total=len(out))
+    return [await _to_media_out(db, m, user_id) for m in items]
 
 
 @router.delete("/media/audio/{audio_id}", status_code=status.HTTP_204_NO_CONTENT)

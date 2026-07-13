@@ -45,7 +45,7 @@ async def add_favorite(
     )
 
 
-@router.get("/rooms/{room_id}/favorites", response_model=schemas.Page[schemas.FavoriteListItem])
+@router.get("/rooms/{room_id}/favorites", response_model=list[schemas.FavoriteListItem])
 async def list_favorites(
     room_id: int,
     entity_type: str | None = None,
@@ -58,7 +58,7 @@ async def list_favorites(
     :param entity_type: если передан "document"/"media", то вернуть только этот тип
     :param user_id: id текущего пользователя (подставляется из токена)
     :param db: сессия БД
-    :return: страница со списком избранного (Page[FavoriteListItem])
+    :return: список избранного (list[FavoriteListItem])
     """
     et = EntityType(entity_type) if entity_type else None
     favorites = await favorites_repository.list_by_user(db, user_id, et)
@@ -80,7 +80,7 @@ async def list_favorites(
                 entity_type=fav.entity_type, entity_id=fav.entity_id, title=media.original_name, added_at=fav.created_at,
             ))
 
-    return schemas.Page(items=items, total=len(items))
+    return items
 
 
 @router.delete("/favorites/{favorite_id}", status_code=status.HTTP_204_NO_CONTENT)

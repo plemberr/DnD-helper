@@ -42,7 +42,7 @@ async def create_folder(
 
 @router.get(
     "/rooms/{room_id}/document-folders",
-    response_model=schemas.Page[schemas.DocumentFolderOut],
+    response_model=list[schemas.DocumentFolderOut],
 )
 async def list_folders(
     room_id: int,
@@ -57,10 +57,9 @@ async def list_folders(
     если не передан, то вернуть папки верхнего уровня
     :param user_id: id текущего пользователя (подставляется из токена, должен быть мастером комнаты)
     :param db: сессия БД
-    :return: страница со списком папок (Page[DocumentFolderOut])
+    :return: список папок (list[DocumentFolderOut])
     """
-    items = await folders_repository.list_by_room(db, room_id, parent_folder_id, filter_parent=True)
-    return schemas.Page(items=items, total=len(items))
+    return await folders_repository.list_by_room(db, room_id, parent_folder_id, filter_parent=True)
 
 
 @router.patch(

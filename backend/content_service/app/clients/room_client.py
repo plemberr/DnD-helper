@@ -16,9 +16,9 @@ async def fetch_room_master_id(room_id: int) -> int:
         except httpx.RequestError:
             raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Room service недоступен")
 
-    if response.status_code == 404:
+    if response.status_code == status.HTTP_404_NOT_FOUND:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Комната не найдена")
-    if response.status_code != 200:
+    if response.status_code != status.HTTP_200_OK:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Не удалось получить данные комнаты")
 
     for member in response.json()["items"]:
