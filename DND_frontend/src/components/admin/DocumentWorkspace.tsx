@@ -127,7 +127,7 @@ export function DocumentWorkspace({
       if (!selectedMediaPreview.item.fileUrl) {
         return (
           <Typography variant="body2" color="text.secondary">
-            Для предпросмотра картинки загрузите файл через кнопку "+" в библиотеке.
+            Для предпросмотра картинки загрузите файл через кнопку " + " в библиотеке.
           </Typography>
         );
       }
