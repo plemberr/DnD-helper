@@ -13,6 +13,11 @@ bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def _decode_access_token(token: str) -> int:
+    """
+    Декодирует access-токен и достаёт из него id пользователя.
+    :param token: сырой JWT-токен
+    :return: id пользователя
+    """
     unauthorized = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Не авторизован",
@@ -21,7 +26,7 @@ def _decode_access_token(token: str) -> int:
     try:
         payload = security.decode_token(token)
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Access token истек")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Access token истек")
     except jwt.InvalidTokenError:
         raise unauthorized
 
@@ -35,26 +40,39 @@ def _decode_access_token(token: str) -> int:
     return int(user_id)
 
 
-# обязательная авторизация
 async def get_current_user_id(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
 ) -> int:
+    """
+    FastAPI-зависимость: требует валидный Bearer access-токен и возвращает id пользователя.
+    Используется на ручках, доступных любому авторизованному пользователю.
+    :param credentials: заголовок Authorization, извлекается автоматически через HTTPBearer
+    :return: id текущего пользователя
+    """
     if credentials is None:
         raise HTTPException(
-            status_code=401,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Не авторизован",
             headers={"WWW-Authenticate": "Bearer"},
         )
     return _decode_access_token(credentials.credentials)
 
 
-# проверка, что пользователь — мастер комнаты room_id
 async def require_room_master(
     room_id: int,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ) -> int:
+    """
+    FastAPI-зависимость: требует, чтобы текущий пользователь был мастером указанной комнаты.
+    Сначала проверяет валидность токена (через get_current_user_id), затем
+    запрашивает у room_service, кто является мастером комнаты room_id,
+    и сравнивает с id текущего пользователя.
+    :param room_id: id комнаты, для которой проверяются права
+    :param user_id: id текущего пользователя (из токена)
+    :return: id пользователя (совпадает с id мастера комнаты)
+    """
     master_id = await fetch_room_master_id(room_id)
     if master_id != user_id:
-        raise HTTPException(status_code=403, detail="Требуются права мастера комнаты")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Требуются права мастера комнаты")
     return user_id

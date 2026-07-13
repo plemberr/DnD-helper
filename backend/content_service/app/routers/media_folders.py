@@ -20,6 +20,14 @@ async def create_media_folder(
     user_id: int = Depends(require_room_master),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Создаёт медиапапку в указанной комнате (доступно только мастеру комнаты).
+    :param room_id: id комнаты, в которой создаётся папка
+    :param payload: данные новой папки (name)
+    :param user_id: id текущего пользователя (подставляется из токена, должен быть мастером комнаты)
+    :param db: сессия БД
+    :return: созданная медиапапка (MediaFolderOut)
+    """
     return await media_folders_repository.create(db, room_id, payload.name)
 
 
@@ -32,6 +40,13 @@ async def list_media_folders(
     user_id: int = Depends(require_room_master),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Возвращает список медиапапок комнаты (доступно только мастеру комнаты).
+    :param room_id: id комнаты
+    :param user_id: id текущего пользователя (подставляется из токена, должен быть мастером комнаты)
+    :param db: сессия БД
+    :return: страница со списком медиапапок (Page[MediaFolderOut])
+    """
     items = await media_folders_repository.list_by_room(db, room_id)
     return schemas.Page(items=items, total=len(items))
 
@@ -47,9 +62,18 @@ async def update_media_folder(
     user_id: int = Depends(require_room_master),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Переименовывает медиапапку (доступно только мастеру комнаты).
+    :param room_id: id комнаты, которой должна принадлежать папка
+    :param folder_id: id редактируемой медиапапки
+    :param payload: поля для обновления (name)
+    :param user_id: id текущего пользователя (подставляется из токена, должен быть мастером комнаты)
+    :param db: сессия БД
+    :return: обновлённая медиапапка (MediaFolderOut)
+    """
     folder = await media_folders_repository.get_by_id(db, folder_id)
     if folder is None or folder.room_id != room_id:
-        raise HTTPException(status_code=404, detail="Папка не найдена")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Папка не найдена")
     return await media_folders_repository.update(db, folder, payload.name)
 
 
@@ -63,7 +87,15 @@ async def delete_media_folder(
     user_id: int = Depends(require_room_master),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Удаляет медиапапку (доступно только мастеру комнаты).
+    :param room_id: id комнаты, которой должна принадлежать папка
+    :param folder_id: id удаляемой медиапапки
+    :param user_id: id текущего пользователя (подставляется из токена, должен быть мастером комнаты)
+    :param db: сессия БД
+    :return: ничего (204 No Content)
+    """
     folder = await media_folders_repository.get_by_id(db, folder_id)
     if folder is None or folder.room_id != room_id:
-        raise HTTPException(status_code=404, detail="Папка не найдена")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Папка не найдена")
     await media_folders_repository.delete(db, folder)

@@ -16,10 +16,17 @@ async def add_favorite(
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Добавляет документ или медиафайл в избранное текущего пользователя.
+    :param payload: данные для добавления (entity_type: "document"/"media", entity_id)
+    :param user_id: id текущего пользователя (подставляется из токена)
+    :param db: сессия БД
+    :return: созданная запись избранного (FavoriteOut)
+    """
     try:
         entity_type = EntityType(payload.entity_type)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Некорректный entity_type")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Некорректный entity_type")
 
     if entity_type == EntityType.document:
         entity = await documents_repository.get_by_id(db, payload.entity_id)
@@ -27,7 +34,7 @@ async def add_favorite(
         entity = await media_files_repository.get_by_id(db, payload.entity_id)
 
     if entity is None:
-        raise HTTPException(status_code=404, detail="Запись не найдена")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запись не найдена")
 
     favorite = await favorites_repository.create(db, user_id, entity_type, payload.entity_id)
     return schemas.FavoriteOut(
@@ -45,6 +52,14 @@ async def list_favorites(
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Возвращает список избранного текущего пользователя, отфильтрованный по комнате.
+    :param room_id: id комнаты (в ответ попадут только записи, относящиеся к ней)
+    :param entity_type: если передан "document"/"media", то вернуть только этот тип
+    :param user_id: id текущего пользователя (подставляется из токена)
+    :param db: сессия БД
+    :return: страница со списком избранного (Page[FavoriteListItem])
+    """
     et = EntityType(entity_type) if entity_type else None
     favorites = await favorites_repository.list_by_user(db, user_id, et)
 
@@ -74,7 +89,14 @@ async def remove_favorite(
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Удаляет запись избранного (можно удалить только своё избранное).
+    :param favorite_id: id записи избранного
+    :param user_id: id текущего пользователя (подставляется из токена)
+    :param db: сессия БД
+    :return: ничего (204 No Content)
+    """
     favorite = await favorites_repository.get_by_id(db, favorite_id)
     if favorite is None or favorite.user_id != user_id:
-        raise HTTPException(status_code=404, detail="Запись не найдена")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запись не найдена")
     await favorites_repository.delete(db, favorite)
