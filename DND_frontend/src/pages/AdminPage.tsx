@@ -8,6 +8,7 @@ import { MusicLibraryFooter } from '../components/admin/MusicLibraryFooter';
 import {
   documentTree as initialDocumentTree,
   type FolderNode,
+  type MediaFileNode,
   type MediaType,
   type TextFileNode,
 } from '../data/library';
@@ -33,6 +34,13 @@ type DragState =
       sourceFolderId?: string;
     }
   | null;
+
+type SidebarMediaDropPayload = {
+  mediaType: MediaType;
+  itemId: string;
+  itemName: string;
+  itemKind: 'file';
+};
 
 const fallbackDocument: TextFileNode = {
   id: 'fallback-document',
@@ -179,6 +187,18 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
 
   const getTabDocument = (documentId: string): TextFileNode => nodeHelper.findTextFileById(documentRoots, documentId) ?? activeDocument;
 
+  const dropMediaIntoFolder = (payload: SidebarMediaDropPayload, folderId: string) => {
+    const mediaNode: MediaFileNode = {
+      id: `linked-${payload.mediaType}-${payload.itemId}-${Date.now()}`,
+      name: payload.itemName,
+      kind: payload.mediaType,
+      summary: `Добавлено из медиатеки (${payload.mediaType})`,
+    };
+
+    setDocumentRoots((current) => nodeHelper.insertNodeIntoFolder(current, folderId, mediaNode));
+    setExpandedFolders((current) => ({ ...current, [folderId]: true }));
+  };
+
   const moveNodeToFolder = (nodeId: string, folderId: string, insertIndex: number | null = null) => {
     setDocumentRoots((current) => {
       const sourceNode = nodeHelper.findNodeById(current, nodeId);
@@ -228,6 +248,7 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
             onSelectDocument={updateActiveTabDocument}
             onSelectMediaType={setSelectedMediaType}
             onMoveNodeToFolder={moveNodeToFolder}
+            onDropMediaIntoFolder={dropMediaIntoFolder}
             getDragState={() => dragStateRef.current}
             onSetDragState={updateDragState}
             onRootDrop={handleRootDrop}

@@ -11,6 +11,8 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { Box, IconButton, Stack, Typography } from '@mui/material';
 import type { FolderNode, MediaType, TreeNode } from '../../data/library';
 
+const MEDIA_LIBRARY_DND_MIME = 'application/x-tenzor-media-library-item';
+
 type SidebarDragKind = 'folder' | 'document';
 
 type SidebarDragState =
@@ -20,6 +22,13 @@ type SidebarDragState =
       sourceFolderId?: string;
     }
   | null;
+
+type SidebarMediaDropPayload = {
+  mediaType: MediaType;
+  itemId: string;
+  itemName: string;
+  itemKind: 'file';
+};
 
 type DocumentTreeSidebarProps = {
   documentRoots: FolderNode[];
@@ -33,6 +42,7 @@ type DocumentTreeSidebarProps = {
   onSelectDocument: (documentId: string) => void;
   onSelectMediaType: (mediaType: MediaType) => void;
   onMoveNodeToFolder: (nodeId: string, folderId: string, insertIndex: number | null) => void;
+  onDropMediaIntoFolder: (payload: SidebarMediaDropPayload, folderId: string) => void;
   getDragState: () => SidebarDragState;
   onSetDragState: (nextDragState: SidebarDragState) => void;
   onRootDrop: (rootId: string, insertIndex: number) => void;
@@ -50,10 +60,39 @@ export function DocumentTreeSidebar({
   onSelectDocument,
   onSelectMediaType,
   onMoveNodeToFolder,
+  onDropMediaIntoFolder,
   getDragState,
   onSetDragState,
   onRootDrop,
 }: DocumentTreeSidebarProps) {
+  const getSidebarMediaDropPayload = (event: React.DragEvent<HTMLElement>): SidebarMediaDropPayload | null => {
+    const rawPayload = event.dataTransfer.getData(MEDIA_LIBRARY_DND_MIME);
+    if (!rawPayload) {
+      return null;
+    }
+
+    try {
+      const parsedPayload = JSON.parse(rawPayload) as Partial<SidebarMediaDropPayload>;
+      if (
+        (parsedPayload.mediaType === 'music' || parsedPayload.mediaType === 'picture' || parsedPayload.mediaType === 'sound') &&
+        typeof parsedPayload.itemId === 'string' &&
+        typeof parsedPayload.itemName === 'string' &&
+        parsedPayload.itemKind === 'file'
+      ) {
+        return {
+          mediaType: parsedPayload.mediaType,
+          itemId: parsedPayload.itemId,
+          itemName: parsedPayload.itemName,
+          itemKind: 'file',
+        };
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
+  };
+
   const renderSidebarNodes = (nodes: TreeNode[], parentFolderId: string) =>
     nodes.map((child, childIndex) => {
       const isSelectedDocument = child.kind === 'document' && child.id === activeDocumentId;
@@ -67,6 +106,14 @@ export function DocumentTreeSidebar({
             onDragOver={(event) => event.preventDefault()}
             onDrop={(event) => {
               event.preventDefault();
+              const mediaDropPayload = getSidebarMediaDropPayload(event);
+              if (mediaDropPayload) {
+                if (child.kind === 'folder') {
+                  onDropMediaIntoFolder(mediaDropPayload, child.id);
+                }
+                return;
+              }
+
               const currentDrag = getDragState();
               if (!currentDrag || currentDrag.id === child.id) {
                 return;
@@ -221,6 +268,12 @@ export function DocumentTreeSidebar({
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault();
+                const mediaDropPayload = getSidebarMediaDropPayload(event);
+                if (mediaDropPayload) {
+                  onDropMediaIntoFolder(mediaDropPayload, rootNode.id);
+                  return;
+                }
+
                 onRootDrop(rootNode.id, rootNode.children.length);
               }}
             >
