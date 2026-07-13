@@ -6,135 +6,243 @@ import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import ViewListOutlinedIcon from '@mui/icons-material/ViewListOutlined';
+import { useEffect, useRef, useState } from 'react';
+import { Box, CircularProgress, IconButton, Paper, Stack, Typography } from '@mui/material';
+import { useMutation, useQuery } from '../../lib/reactZustandQuery';
+import { Api } from '../../api/Api';
 import { mediaLibraries, type MediaItem, type MediaType } from '../../data/library';
+import { useMediaLibraryStore } from '../../store/mediaLibraryStore';
 
-type MediaLibraryPanelProps = {
-  selectedMediaType: MediaType;
-  viewMode: 'list' | 'grid';
-  activeItems: MediaItem[];
-  onToggleViewMode: () => void;
-  onAddMediaItem: () => void;
-  onSelectMediaType: (kind: MediaType) => void;
-  onDeleteMediaItem: (itemId: string) => void;
-  onMediaDragStart: (itemId: string) => void;
-  onMediaDragEnd: () => void;
-  onMediaDropAt: (index: number) => void;
-};
+type MediaDragState = {
+  mediaType: MediaType;
+  itemId: string;
+} | null;
 
-export function MediaLibraryPanel({
-  selectedMediaType,
-  viewMode,
-  activeItems,
-  onToggleViewMode,
-  onAddMediaItem,
-  onSelectMediaType,
-  onDeleteMediaItem,
-  onMediaDragStart,
-  onMediaDragEnd,
-  onMediaDropAt,
-}: MediaLibraryPanelProps) {
-  const activeLibrary = mediaLibraries[selectedMediaType];
+export function MediaLibraryPanel() {
+  const orderedMediaTypes: MediaType[] = ['picture', 'sound', 'music'];
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const inputRefs = useRef<Record<MediaType, HTMLInputElement | null>>({
+    picture: null,
+    sound: null,
+    music: null,
+  });
+  const mediaDragRef = useRef<MediaDragState>(null);
+  const mediaState = useMediaLibraryStore((state) => state.mediaState);
+  const uploadingByType = useMediaLibraryStore((state) => state.uploadingByType);
+  const selectedMediaPreview = useMediaLibraryStore((state) => state.selectedMediaPreview);
+  const setMediaState = useMediaLibraryStore((state) => state.setMediaState);
+  const addMediaItem = useMediaLibraryStore((state) => state.addMediaItem);
+  const deleteMediaItem = useMediaLibraryStore((state) => state.deleteMediaItem);
+  const moveMediaItem = useMediaLibraryStore((state) => state.moveMediaItem);
+  const selectMediaItem = useMediaLibraryStore((state) => state.selectMediaItem);
+  const setUploadingState = useMediaLibraryStore((state) => state.setUploadingState);
+
+  const mediaLibraryQuery = useQuery<Record<MediaType, MediaItem[]>>({
+    queryKey: ['media-library'],
+    queryFn: Api.getMediaLibrary,
+    staleTime: 30_000,
+    retry: 1,
+  });
+
+  const uploadMediaMutation = useMutation<
+    { mediaType: MediaType; item: MediaItem },
+    { mediaType: MediaType; file: File }
+  >({
+    mutationFn: async ({ mediaType, file }) => {
+      const uploaded = await Api.uploadMediaFile(mediaType, file);
+      return { mediaType, item: uploaded };
+    },
+    onSuccess: ({ mediaType, item }) => {
+      addMediaItem(mediaType, item);
+      selectMediaItem(mediaType, item);
+    },
+  });
+
+  useEffect(() => {
+    if (mediaLibraryQuery.data) {
+      setMediaState(mediaLibraryQuery.data);
+    }
+  }, [mediaLibraryQuery.data, setMediaState]);
+
+  const handleUploadMediaItem = async (mediaType: MediaType, file: File) => {
+    setUploadingState(mediaType, true);
+    try {
+      await uploadMediaMutation.mutate({ mediaType, file });
+    } finally {
+      setUploadingState(mediaType, false);
+    }
+  };
+
+  const handleMediaDropAt = (mediaType: MediaType, index: number) => {
+    const dragged = mediaDragRef.current;
+    if (!dragged || dragged.mediaType !== mediaType) {
+      return;
+    }
+
+    const fromIndex = mediaState[mediaType].findIndex((entry) => entry.id === dragged.itemId);
+    if (fromIndex !== -1 && fromIndex !== index) {
+      moveMediaItem(mediaType, fromIndex, index);
+    }
+
+    mediaDragRef.current = null;
+  };
+
+  const acceptByMediaType: Record<MediaType, string> = {
+    picture: 'image/*',
+    sound: 'audio/*',
+    music: 'audio/*',
+  };
 
   return (
-    <aside className="flex w-[340px] shrink-0 flex-col border-l border-[#e2ddd4] bg-stone-50">
-      <div className="flex h-12 items-center border-b border-[#e2ddd4] bg-white px-3">
-        <div className="flex-1 text-center font-serif text-[17px] font-medium text-stone-900">{activeLibrary.title}</div>
-        <button className="rounded-full p-1.5 text-stone-500 transition hover:bg-amber-50 hover:text-amber-700" onClick={onToggleViewMode}>
+    <Box component="aside" sx={{ width: 340, flexShrink: 0, display: 'flex', flexDirection: 'column', borderLeft: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+      <Stack direction="row" alignItems="center" sx={{ px: 1.5, height: 48, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+        <Typography variant="subtitle1" sx={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>
+          Библиотека медиа файлов
+        </Typography>
+        <IconButton size="small" onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}>
           {viewMode === 'list' ? <ViewListOutlinedIcon fontSize="small" /> : <GridViewOutlinedIcon fontSize="small" />}
-        </button>
-        <button className="rounded-full p-1.5 text-stone-500 transition hover:bg-amber-50 hover:text-amber-700" onClick={onAddMediaItem}>
-          <AddIcon fontSize="small" />
-        </button>
-      </div>
+        </IconButton>
+      </Stack>
 
-      <div className="border-b border-[#e2ddd4] px-3 py-3">
-        <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-stone-400">Фильтр по типу файлов</div>
-        <div className="flex flex-wrap gap-2">
-          {(['music', 'picture', 'sound'] as MediaType[]).map((kind) => {
-            const isActive = selectedMediaType === kind;
+      <Box sx={{ flex: 1, overflow: 'auto' }}>
+        <Stack spacing={1.5} sx={{ p: 1.5 }}>
+          {orderedMediaTypes.map((mediaType) => {
+            const library = mediaLibraries[mediaType];
+            const items = mediaState[mediaType];
+
             return (
-              <button
-                key={kind}
-                onClick={() => onSelectMediaType(kind)}
-                className={`rounded-full px-3 py-1 text-[13px] transition ${
-                  isActive ? 'bg-amber-600 text-white shadow-sm' : 'bg-white text-stone-600 ring-1 ring-inset ring-stone-200 hover:bg-stone-100'
-                }`}
-              >
-                {mediaLibraries[kind].title}
-              </button>
+              <Paper key={mediaType} variant="outlined" sx={{ p: 1.5 }}>
+                <Stack direction="row" alignItems="center">
+                  <Typography variant="subtitle2">{library.title}</Typography>
+                  <Stack direction="row" alignItems="center" spacing={0.25} sx={{ ml: 'auto', color: 'warning.dark' }}>
+                    {mediaType === 'music' && <MusicNoteIcon fontSize="small" />}
+                    {mediaType === 'picture' && <ImageOutlinedIcon fontSize="small" />}
+                    {mediaType === 'sound' && <GraphicEqOutlinedIcon fontSize="small" />}
+                    <input
+                      ref={(element) => {
+                        inputRefs.current[mediaType] = element;
+                      }}
+                      type="file"
+                      accept={acceptByMediaType[mediaType]}
+                      hidden
+                      onChange={async (event) => {
+                        const file = event.target.files?.[0];
+                        if (!file) {
+                          return;
+                        }
+
+                        await handleUploadMediaItem(mediaType, file);
+                        event.target.value = '';
+                      }}
+                    />
+                    <IconButton size="small" onClick={() => inputRefs.current[mediaType]?.click()} disabled={uploadingByType[mediaType]}>
+                      {uploadingByType[mediaType] ? <CircularProgress size={14} /> : <AddIcon fontSize="small" />}
+                    </IconButton>
+                  </Stack>
+                </Stack>
+
+                {viewMode === 'list' ? (
+                  <Stack spacing={1} sx={{ mt: 1 }}>
+                    {items.map((item, index) => (
+                      <Box
+                        key={item.id}
+                        draggable
+                        onClick={() => selectMediaItem(mediaType, item)}
+                        onDragStart={() => {
+                          mediaDragRef.current = { mediaType, itemId: item.id };
+                        }}
+                        onDragEnd={() => {
+                          mediaDragRef.current = null;
+                        }}
+                        onDragOver={(event) => event.preventDefault()}
+                        onDrop={() => handleMediaDropAt(mediaType, index)}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          px: 1.25,
+                          py: 0.75,
+                          borderRadius: 1,
+                          border: 1,
+                          borderColor: selectedMediaPreview?.item.id === item.id ? 'warning.main' : 'divider',
+                          bgcolor: selectedMediaPreview?.item.id === item.id ? 'rgba(255, 167, 38, 0.12)' : 'grey.50',
+                          cursor: 'pointer',
+                          '&:hover': { borderColor: 'warning.light' },
+                        }}
+                      >
+                        <DragIndicatorIcon sx={{ fontSize: 16, cursor: 'grab', color: 'text.secondary' }} />
+                        <Typography variant="body2" noWrap sx={{ flex: 1 }}>
+                          {item.name}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            deleteMediaItem(mediaType, item.id);
+                          }}
+                          aria-label="Удалить"
+                        >
+                          <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Box sx={{ mt: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                    {items.map((item, index) => (
+                      <Box
+                        key={item.id}
+                        draggable
+                        onClick={() => selectMediaItem(mediaType, item)}
+                        onDragStart={() => {
+                          mediaDragRef.current = { mediaType, itemId: item.id };
+                        }}
+                        onDragEnd={() => {
+                          mediaDragRef.current = null;
+                        }}
+                        onDragOver={(event) => event.preventDefault()}
+                        onDrop={() => handleMediaDropAt(mediaType, index)}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          px: 1,
+                          py: 1,
+                          borderRadius: 1,
+                          border: 1,
+                          borderColor: selectedMediaPreview?.item.id === item.id ? 'warning.main' : 'divider',
+                          bgcolor: selectedMediaPreview?.item.id === item.id ? 'rgba(255, 167, 38, 0.12)' : 'grey.50',
+                          cursor: 'pointer',
+                          '&:hover': { borderColor: 'warning.light' },
+                        }}
+                      >
+                        <DragIndicatorIcon sx={{ fontSize: 16, cursor: 'grab', color: 'text.secondary' }} />
+                        <Typography variant="body2" noWrap sx={{ flex: 1 }}>
+                          {item.name}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            deleteMediaItem(mediaType, item.id);
+                          }}
+                          aria-label="Удалить"
+                        >
+                          <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block', fontStyle: 'italic' }}>
+                  {library.subtitle}
+                </Typography>
+              </Paper>
             );
           })}
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-auto">
-        <div className="p-3">
-          <div className="flex items-center">
-            <div className="font-serif text-[16px] font-medium text-stone-900">{activeLibrary.title}</div>
-            <div className="ml-auto flex items-center gap-1 text-amber-700">
-              {selectedMediaType === 'music' && <MusicNoteIcon fontSize="small" />}
-              {selectedMediaType === 'picture' && <ImageOutlinedIcon fontSize="small" />}
-              {selectedMediaType === 'sound' && <GraphicEqOutlinedIcon fontSize="small" />}
-              <button className="rounded-full p-1 text-stone-500 hover:bg-amber-50 hover:text-amber-700" onClick={onAddMediaItem}>
-                <AddIcon fontSize="small" />
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-3 font-mono text-[10px] uppercase tracking-wider text-stone-400">Хлебные крошки вложения</div>
-          {viewMode === 'list' ? (
-            <div className="mt-2 space-y-1.5">
-              {activeItems.map((item, index) => (
-                <div
-                  key={item.id}
-                  draggable
-                  onDragStart={() => onMediaDragStart(item.id)}
-                  onDragEnd={onMediaDragEnd}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={() => onMediaDropAt(index)}
-                  className="flex items-center gap-2 rounded-md border border-stone-200 bg-white px-3 py-1.5 text-[13px] text-stone-700 shadow-sm transition hover:border-amber-300"
-                >
-                  <DragIndicatorIcon sx={{ fontSize: 16 }} className="cursor-grab text-stone-300" />
-                  <span className="flex-1 truncate">{item.name}</span>
-                  <button
-                    className="rounded-full p-1 text-stone-400 hover:bg-red-50 hover:text-red-500"
-                    onClick={() => onDeleteMediaItem(item.id)}
-                    aria-label="Удалить"
-                  >
-                    <DeleteOutlineIcon sx={{ fontSize: 16 }} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {activeItems.map((item, index) => (
-                <div
-                  key={item.id}
-                  draggable
-                  onDragStart={() => onMediaDragStart(item.id)}
-                  onDragEnd={onMediaDragEnd}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={() => onMediaDropAt(index)}
-                  className="flex items-center gap-2 rounded-md border border-stone-200 bg-white px-3 py-2 text-[13px] text-stone-700 shadow-sm transition hover:border-amber-300"
-                >
-                  <DragIndicatorIcon sx={{ fontSize: 16 }} className="cursor-grab text-stone-300" />
-                  <span className="flex-1 truncate">{item.name}</span>
-                  <button
-                    className="rounded-full p-1 text-stone-400 hover:bg-red-50 hover:text-red-500"
-                    onClick={() => onDeleteMediaItem(item.id)}
-                    aria-label="Удалить"
-                  >
-                    <DeleteOutlineIcon sx={{ fontSize: 16 }} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-3 text-[12px] italic text-stone-400">{activeLibrary.subtitle}</div>
-        </div>
-      </div>
-    </aside>
+        </Stack>
+      </Box>
+    </Box>
   );
 }

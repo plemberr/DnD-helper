@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: app-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-app_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-app_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - app_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app_user} -d ${POSTGRES_DB:-app_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend
+    restart: unless-stopped
+    volumes:
+      - ./migrations:/app/migrations
+      - ./keys:/app/keys:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-app_user}:${POSTGRES_PASSWORD:-app_pass}@db:5432/${POSTGRES_DB:-app_db}
+
+      JWT_ALGORITHM: RS256
+      JWT_PRIVATE_KEY_PATH: keys/private.pem
+      JWT_PUBLIC_KEY_PATH: keys/public.pem
+      ACCESS_TOKEN_EXPIRE_MINUTES: 15
+      REFRESH_TOKEN_EXPIRE_DAYS: 30
+
+      AUTH_SERVICE_URL: http://localhost:8001
+
+    ports:
+      - "8001:8001"
+      - "8002:8002"
+
+volumes:
+  app_db_data:

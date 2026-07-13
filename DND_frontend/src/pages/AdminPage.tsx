@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { Box } from '@mui/material';
 import { AppHeader } from '../components/AppHeader';
 import { DocumentTreeSidebar } from '../components/admin/DocumentTreeSidebar';
 import { DocumentWorkspace } from '../components/admin/DocumentWorkspace';
@@ -6,10 +7,7 @@ import { MediaLibraryPanel } from '../components/admin/MediaLibraryPanel';
 import { MusicLibraryFooter } from '../components/admin/MusicLibraryFooter';
 import {
   documentTree as initialDocumentTree,
-  mediaLibraries,
-  musicTracks,
   type FolderNode,
-  type MediaItem,
   type MediaType,
   type TextFileNode,
 } from '../data/library';
@@ -26,7 +24,7 @@ type TabState = {
   documentId: string;
 };
 
-type DragKind = 'folder' | 'document' | 'media';
+type DragKind = 'folder' | 'document';
 
 type DragState =
   | {
@@ -45,25 +43,7 @@ const fallbackDocument: TextFileNode = {
   links: [],
 };
 
-const createMediaState = () =>
-  Object.fromEntries(
-    Object.entries(mediaLibraries).map(([kind, library]) => [kind, [...library.items]]),
-  ) as Record<MediaType, MediaItem[]>;
-
-function labelForMediaType(kind: MediaType): string {
-  if (kind === 'music') {
-    return 'Музыка';
-  }
-
-  if (kind === 'picture') {
-    return 'Картинка';
-  }
-
-  return 'Звук';
-}
-
 export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [documentRoots, setDocumentRoots] = useState<FolderNode[]>(() => nodeHelper.cloneTree(initialDocumentTree));
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>(
     Object.fromEntries(initialDocumentTree.map((node) => [node.id, true])),
@@ -74,18 +54,13 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
   ]);
   const [activeTabId, setActiveTabId] = useState('tab-1');
   const [selectedMediaType, setSelectedMediaType] = useState<MediaType>('music');
-  const [mediaState, setMediaState] = useState<Record<MediaType, MediaItem[]>>(createMediaState);
   const dragStateRef = useRef<DragState>(null);
-  const [selectedMusic, setSelectedMusic] = useState(musicTracks[0]);
-  const [musicPlaying, setMusicPlaying] = useState(false);
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
   const activeDocument =
     nodeHelper.findTextFileById(documentRoots, activeTab?.documentId ?? 'doc-1-text') ??
     nodeHelper.findFirstTextDocument(documentRoots) ??
     fallbackDocument;
-  const activeItems = mediaState[selectedMediaType];
-
   const breadcrumbs = useMemo(() => ['Корень', 'Кампания', activeDocument.name], [activeDocument]);
 
   const updateDragState = (nextDragState: DragState) => {
@@ -194,54 +169,12 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
     });
   };
 
-  const addMediaItem = () => {
-    setMediaState((current) => {
-      const next = [...current[selectedMediaType]];
-      const newIndex = next.filter((item) => item.kind === 'file').length + 1;
-      next.push({
-        id: `${selectedMediaType}-${Date.now()}`,
-        name: `${labelForMediaType(selectedMediaType)} файл ${newIndex}`,
-        kind: 'file',
-      });
-      return { ...current, [selectedMediaType]: next };
-    });
-  };
-
-  const deleteMediaItem = (itemId: string) => {
-    setMediaState((current) => ({
-      ...current,
-      [selectedMediaType]: current[selectedMediaType].filter((item) => item.id !== itemId),
-    }));
-  };
-
-  const moveMediaItem = (fromIndex: number, toIndex: number) => {
-    setMediaState((current) => {
-      const next = [...current[selectedMediaType]];
-      const [movedItem] = next.splice(fromIndex, 1);
-      next.splice(toIndex, 0, movedItem);
-      return { ...current, [selectedMediaType]: next };
-    });
-  };
-
   const handleRootDrop = (rootId: string, insertIndex: number) => {
     const currentDrag = dragStateRef.current;
     if (currentDrag?.kind === 'document') {
       moveNodeToFolder(currentDrag.id, rootId, insertIndex);
       updateDragState(null);
     }
-  };
-
-  const handleMediaDropAt = (index: number) => {
-    const dragged = dragStateRef.current;
-    if (dragged?.kind !== 'media') {
-      return;
-    }
-
-    const fromIndex = activeItems.findIndex((entry) => entry.id === dragged.id);
-    if (fromIndex !== -1 && fromIndex !== index) {
-      moveMediaItem(fromIndex, index);
-    }
-    updateDragState(null);
   };
 
   const getTabDocument = (documentId: string): TextFileNode => nodeHelper.findTextFileById(documentRoots, documentId) ?? activeDocument;
@@ -278,13 +211,11 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-[#f3efe8] text-stone-800">
-      <div className="px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-400">Adminka</div>
-
-      <div className="flex flex-1 flex-col">
+    <Box sx={{ display: 'flex', minHeight: '100vh', width: '100%', flexDirection: 'column', overflowX: 'hidden', bgcolor: 'grey.100', color: 'text.primary' }}>
+      <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
         <AppHeader isRoomScreen={false} onOpenAdmin={onOpenAdmin} onOpenRoom={onOpenRoom} />
 
-        <main className="flex min-h-0 flex-1 w-full">
+        <Box component="main" sx={{ display: 'flex', minHeight: 0, flex: 1, width: '100%' }}>
           <DocumentTreeSidebar
             documentRoots={documentRoots}
             expandedFolders={expandedFolders}
@@ -314,27 +245,11 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
             onUpdateTextContent={updateTextContent}
           />
 
-          <MediaLibraryPanel
-            selectedMediaType={selectedMediaType}
-            viewMode={viewMode}
-            activeItems={activeItems}
-            onToggleViewMode={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-            onAddMediaItem={addMediaItem}
-            onSelectMediaType={setSelectedMediaType}
-            onDeleteMediaItem={deleteMediaItem}
-            onMediaDragStart={(itemId) => updateDragState({ kind: 'media', id: itemId })}
-            onMediaDragEnd={() => updateDragState(null)}
-            onMediaDropAt={handleMediaDropAt}
-          />
-        </main>
+          <MediaLibraryPanel />
+        </Box>
 
-        <MusicLibraryFooter
-          selectedMusic={selectedMusic}
-          musicPlaying={musicPlaying}
-          onToggleMusicPlaying={() => setMusicPlaying((value) => !value)}
-          onSelectTrack={setSelectedMusic}
-        />
-      </div>
-    </div>
+        <MusicLibraryFooter />
+      </Box>
+    </Box>
   );
 }

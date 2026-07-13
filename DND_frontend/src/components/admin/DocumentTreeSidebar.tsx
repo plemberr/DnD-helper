@@ -8,9 +8,10 @@ import GraphicEqOutlinedIcon from '@mui/icons-material/GraphicEqOutlined';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import { Box, IconButton, Stack, Typography } from '@mui/material';
 import type { FolderNode, MediaType, TreeNode } from '../../data/library';
 
-type SidebarDragKind = 'folder' | 'document' | 'media';
+type SidebarDragKind = 'folder' | 'document';
 
 type SidebarDragState =
   | {
@@ -61,7 +62,7 @@ export function DocumentTreeSidebar({
       const isNestedFolderExpanded = child.kind === 'folder' && expandedFolders[child.id];
 
       return (
-        <div key={child.id} className="space-y-0.5">
+        <Box key={child.id} sx={{ mb: 0.5 }}>
           <div
             onDragOver={(event) => event.preventDefault()}
             onDrop={(event) => {
@@ -78,34 +79,46 @@ export function DocumentTreeSidebar({
               }
               onSetDragState(null);
             }}
-            className={`flex w-full items-center gap-1 rounded px-1.5 py-1 text-left transition hover:bg-stone-100 ${
-              isSelected ? 'bg-amber-50 font-medium text-amber-900' : ''
-            }`}
+            style={{ width: '100%' }}
           >
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={0.25}
+              sx={{
+                width: '100%',
+                px: 0.75,
+                py: 0.5,
+                borderRadius: 1,
+                bgcolor: isSelected ? 'warning.50' : 'transparent',
+                color: isSelected ? 'warning.dark' : 'text.primary',
+                '&:hover': { bgcolor: isSelected ? 'warning.100' : 'action.hover' },
+              }}
+            >
             {child.kind === 'folder' ? (
               <>
-                <button
-                  type="button"
+                <IconButton
+                  size="small"
                   onClick={() => onToggleFolder(child.id)}
-                  className="flex shrink-0 items-center text-stone-500"
+                  sx={{ color: 'text.secondary' }}
                 >
                   {isNestedFolderExpanded ? <ExpandMoreIcon fontSize="small" /> : <KeyboardArrowRightIcon fontSize="small" />}
-                </button>
-                <FolderOutlinedIcon fontSize="small" className="shrink-0 text-stone-500" />
+                </IconButton>
+                <FolderOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
               </>
             ) : child.kind === 'document' ? (
-              <DescriptionOutlinedIcon fontSize="small" className="shrink-0 text-stone-500" />
+              <DescriptionOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
             ) : child.kind === 'music' ? (
-              <MusicNoteIcon fontSize="small" className="shrink-0 text-stone-500" />
+              <MusicNoteIcon fontSize="small" sx={{ color: 'text.secondary' }} />
             ) : child.kind === 'picture' ? (
-              <ImageOutlinedIcon fontSize="small" className="shrink-0 text-stone-500" />
+              <ImageOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
             ) : (
-              <GraphicEqOutlinedIcon fontSize="small" className="shrink-0 text-stone-500" />
+              <GraphicEqOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
             )}
 
             <button
               type="button"
-              className="flex min-w-0 flex-1 items-center gap-1 text-left"
+              style={{ display: 'flex', minWidth: 0, flex: 1, alignItems: 'center', background: 'none', border: 0, cursor: 'pointer', padding: 0 }}
               onClick={() => {
                 if (child.kind === 'document') {
                   onSelectDocument(child.id);
@@ -116,14 +129,15 @@ export function DocumentTreeSidebar({
                 }
               }}
             >
-              <span className="truncate">{child.name}</span>
+              <Typography variant="body2" noWrap sx={{ minWidth: 0 }}>
+                {child.name}
+              </Typography>
             </button>
 
             {child.kind === 'folder' && (
               <>
-                <button
-                  type="button"
-                  className="rounded p-0.5 text-stone-400 hover:bg-stone-200 hover:text-stone-700"
+                <IconButton
+                  size="small"
                   onClick={(event) => {
                     event.stopPropagation();
                     onCreateDocumentInFolder(child.id);
@@ -131,10 +145,9 @@ export function DocumentTreeSidebar({
                   aria-label={`Добавить файл в ${child.name}`}
                 >
                   <AddIcon sx={{ fontSize: 14 }} />
-                </button>
-                <button
-                  type="button"
-                  className="rounded p-0.5 text-stone-400 hover:bg-stone-200 hover:text-stone-700"
+                </IconButton>
+                <IconButton
+                  size="small"
                   onClick={(event) => {
                     event.stopPropagation();
                     onDeleteNode(child.id);
@@ -142,15 +155,14 @@ export function DocumentTreeSidebar({
                   aria-label={`Удалить папку ${child.name}`}
                 >
                   <DeleteOutlineIcon sx={{ fontSize: 14 }} />
-                </button>
+                </IconButton>
               </>
             )}
 
             {child.kind === 'document' && (
               <>
-                <button
-                  type="button"
-                  className="rounded p-0.5 text-stone-400 hover:bg-stone-200 hover:text-stone-700"
+                <IconButton
+                  size="small"
                   onClick={(event) => {
                     event.stopPropagation();
                     onDeleteNode(child.id);
@@ -158,8 +170,8 @@ export function DocumentTreeSidebar({
                   aria-label={`Удалить ${child.name}`}
                 >
                   <DeleteOutlineIcon sx={{ fontSize: 14 }} />
-                </button>
-                <span
+                </IconButton>
+                <Box
                   draggable
                   onDragStart={(event) => {
                     event.dataTransfer.effectAllowed = 'move';
@@ -170,77 +182,94 @@ export function DocumentTreeSidebar({
                     });
                   }}
                   onDragEnd={() => onSetDragState(null)}
-                  className="cursor-grab text-stone-400"
+                  sx={{ cursor: 'grab', color: 'text.secondary', display: 'inline-flex' }}
                 >
                   <DragIndicatorIcon sx={{ fontSize: 14 }} />
-                </span>
+                </Box>
               </>
             )}
+            </Stack>
           </div>
 
           {isNestedFolderExpanded && child.kind === 'folder' && (
-            <div className="ml-4 space-y-0.5 border-l border-stone-200 pl-2">{renderSidebarNodes(child.children, child.id)}</div>
+            <Box sx={{ ml: 2, pl: 1, borderLeft: 1, borderColor: 'divider' }}>{renderSidebarNodes(child.children, child.id)}</Box>
           )}
-        </div>
+        </Box>
       );
     });
 
   return (
-    <aside className="w-[220px] shrink-0 border-r border-[#e2ddd4] bg-stone-50">
-      <div className="flex items-center justify-between border-b border-[#e2ddd4] px-3 py-2.5">
-        <span className="font-mono text-[11px] uppercase tracking-wider text-stone-400">Папки</span>
-        <button
-          type="button"
-          className="rounded-full p-1 text-stone-500 transition hover:bg-amber-100 hover:text-amber-700"
-          onClick={onCreateFolder}
-          aria-label="Создать папку"
-        >
+    <Box component="aside" sx={{ width: 240, flexShrink: 0, borderRight: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 1.5, py: 1.25, borderBottom: 1, borderColor: 'divider' }}>
+        <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+          Папки
+        </Typography>
+        <IconButton size="small" onClick={onCreateFolder} aria-label="Создать папку">
           <AddIcon sx={{ fontSize: 16 }} />
-        </button>
-      </div>
+        </IconButton>
+      </Stack>
 
-      <div className="space-y-1 p-1.5 text-[13px] leading-tight">
+      <Box sx={{ p: 1 }}>
         {documentRoots.map((rootNode) => {
           const isExpanded = expandedFolders[rootNode.id];
           const isActiveRoot = activeDocumentId.startsWith(rootNode.id);
 
           return (
-            <div
+            <Box
               key={rootNode.id}
-              className="space-y-0.5"
+              sx={{ mb: 0.5 }}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault();
                 onRootDrop(rootNode.id, rootNode.children.length);
               }}
             >
-              <div
-                className={`flex items-center gap-1 rounded px-1.5 py-1 text-left ${
-                  isActiveRoot ? 'bg-amber-50 font-medium text-amber-900' : ''
-                }`}
+              <Stack
+                direction="row"
+                alignItems="center"
+                spacing={0.25}
+                sx={{
+                  px: 0.75,
+                  py: 0.5,
+                  borderRadius: 1,
+                  bgcolor: isActiveRoot ? 'warning.50' : 'transparent',
+                  color: isActiveRoot ? 'warning.dark' : 'text.primary',
+                }}
               >
                 <button
                   onClick={() => onToggleFolder(rootNode.id)}
-                  className="flex flex-1 items-center gap-1 text-left transition hover:bg-stone-100"
+                  style={{
+                    display: 'flex',
+                    flex: 1,
+                    alignItems: 'center',
+                    gap: 4,
+                    textAlign: 'left',
+                    background: 'none',
+                    border: 0,
+                    cursor: 'pointer',
+                    minWidth: 0,
+                    padding: 0,
+                  }}
                 >
                   {isExpanded ? (
-                    <ExpandMoreIcon fontSize="small" className="text-stone-500" />
+                    <ExpandMoreIcon fontSize="small" sx={{ color: 'text.secondary' }} />
                   ) : (
-                    <KeyboardArrowRightIcon fontSize="small" className="text-stone-500" />
+                    <KeyboardArrowRightIcon fontSize="small" sx={{ color: 'text.secondary' }} />
                   )}
-                  <span className="truncate">{rootNode.name}</span>
+                  <FolderOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                  <Typography variant="body2" noWrap>
+                    {rootNode.name}
+                  </Typography>
                 </button>
-                <button
-                  type="button"
-                  className="rounded p-0.5 text-stone-400 hover:bg-stone-200 hover:text-stone-700"
+                <IconButton
+                  size="small"
                   onClick={() => onCreateDocumentInFolder(rootNode.id)}
                   aria-label={`Добавить документ в ${rootNode.name}`}
                 >
                   <AddIcon sx={{ fontSize: 14 }} />
-                </button>
-                <button
-                  type="button"
-                  className="rounded p-0.5 text-stone-400 hover:bg-stone-200 hover:text-stone-700"
+                </IconButton>
+                <IconButton
+                  size="small"
                   onClick={(event) => {
                     event.stopPropagation();
                     onDeleteNode(rootNode.id);
@@ -248,14 +277,14 @@ export function DocumentTreeSidebar({
                   aria-label={`Удалить папку ${rootNode.name}`}
                 >
                   <DeleteOutlineIcon sx={{ fontSize: 14 }} />
-                </button>
-              </div>
+                </IconButton>
+              </Stack>
 
-              {isExpanded && <div className="ml-4 space-y-0.5 border-l border-stone-200 pl-2">{renderSidebarNodes(rootNode.children, rootNode.id)}</div>}
-            </div>
+              {isExpanded && <Box sx={{ ml: 2, pl: 1, borderLeft: 1, borderColor: 'divider' }}>{renderSidebarNodes(rootNode.children, rootNode.id)}</Box>}
+            </Box>
           );
         })}
-      </div>
-    </aside>
+      </Box>
+    </Box>
   );
 }

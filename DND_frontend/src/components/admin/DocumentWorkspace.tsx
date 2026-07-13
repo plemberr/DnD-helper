@@ -2,7 +2,21 @@ import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
+import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
+import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import {
+  Box,
+  Chip,
+  IconButton,
+  Paper,
+  Stack,
+  Tab,
+  Tabs,
+  TextField,
+  Typography,
+} from '@mui/material';
 import type { TextFileNode } from '../../data/library';
+import { useMediaLibraryStore } from '../../store/mediaLibraryStore';
 
 type TabState = {
   id: string;
@@ -33,102 +47,192 @@ export function DocumentWorkspace({
   onOpenNewTab,
   onUpdateTextContent,
 }: DocumentWorkspaceProps) {
+  const selectedMediaPreview = useMediaLibraryStore((state) => state.selectedMediaPreview);
+
+  const renderMediaPreview = () => {
+    if (!selectedMediaPreview || selectedMediaPreview.item.kind === 'folder') {
+      return (
+        <Typography variant="body2" color="text.secondary">
+          Выберите файл в правой библиотеке, чтобы показать картинку или открыть аудиоплеер.
+        </Typography>
+      );
+    }
+
+    if (selectedMediaPreview.mediaType === 'picture') {
+      if (!selectedMediaPreview.item.fileUrl) {
+        return (
+          <Typography variant="body2" color="text.secondary">
+            Для предпросмотра картинки загрузите файл через кнопку "+" в библиотеке.
+          </Typography>
+        );
+      }
+
+      return (
+        <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 1 }}>
+          <Box
+            component="img"
+            src={selectedMediaPreview.item.fileUrl}
+            alt={selectedMediaPreview.item.name}
+            sx={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 1 }}
+          />
+        </Box>
+      );
+    }
+
+    if (!selectedMediaPreview.item.fileUrl) {
+      return (
+        <Typography variant="body2" color="text.secondary">
+          Для воспроизведения аудио загрузите музыкальный файл или звук через библиотеку справа.
+        </Typography>
+      );
+    }
+
+    return (
+      <Stack spacing={2} sx={{ width: '100%', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+        <Typography variant="subtitle2">{selectedMediaPreview.item.name}</Typography>
+        <Box
+          component="audio"
+          controls
+          src={selectedMediaPreview.item.fileUrl}
+          sx={{ width: '100%', maxWidth: 520 }}
+        />
+      </Stack>
+    );
+  };
+
   return (
-    <section className="flex min-w-0 flex-1 flex-col border-r border-[#e2ddd4] bg-white">
-      <div className="flex h-10 items-stretch gap-1 border-b border-[#e2ddd4] bg-stone-100 px-2 pt-2 text-[13px]">
-        {tabs.map((tab) => {
-          const isActive = tab.id === activeTabId;
-          const tabDocument = getTabDocument(tab.documentId);
-
-          return (
-            <div
-              key={tab.id}
-              role="button"
-              tabIndex={0}
-              onClick={() => onSetActiveTabId(tab.id)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  onSetActiveTabId(tab.id);
-                }
-              }}
-              className={`flex cursor-pointer items-center gap-2 rounded-t-md border border-b-0 px-4 transition ${
-                isActive
-                  ? 'border-[#e2ddd4] bg-white font-medium text-stone-900 shadow-[0_-1px_0_theme(colors.amber.500)_inset]'
-                  : 'border-transparent text-stone-500 hover:bg-white/60'
-              }`}
-            >
-              <span className="truncate">
-                {tab.title}: {tabDocument.name}
-              </span>
-              <button
-                type="button"
-                aria-label={`Закрыть ${tab.title}`}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onCloseTab(tab.id);
-                }}
-                className="ml-1 rounded-full p-0.5 text-stone-400 hover:bg-stone-200 hover:text-stone-700"
-              >
-                <CloseIcon sx={{ fontSize: 14 }} />
-              </button>
-            </div>
-          );
-        })}
-        <button
-          className="mb-0 rounded-t-md px-3 text-stone-400 transition hover:bg-white/60 hover:text-amber-700"
-          onClick={onOpenNewTab}
-          aria-label="Добавить вкладку"
+    <Box
+      component="section"
+      sx={{
+        minWidth: 0,
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        borderRight: 1,
+        borderColor: 'divider',
+        bgcolor: 'background.paper',
+      }}
+    >
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1, pt: 1, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.100' }}>
+        <Tabs
+          value={activeTabId}
+          onChange={(_, value) => onSetActiveTabId(value)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ minHeight: 38, flex: 1, '& .MuiTab-root': { minHeight: 38, py: 0.5 } }}
         >
-          <AddIcon sx={{ fontSize: 16 }} />
-        </button>
-      </div>
+          {tabs.map((tab) => {
+            const tabDocument = getTabDocument(tab.documentId);
+            return (
+              <Tab
+                key={tab.id}
+                value={tab.id}
+                label={
+                  <Stack direction="row" alignItems="center" spacing={0.5} sx={{ maxWidth: 220 }}>
+                    <Typography variant="body2" noWrap>
+                      {tab.title}: {tabDocument.name}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      aria-label={`Закрыть ${tab.title}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onCloseTab(tab.id);
+                      }}
+                      sx={{ ml: 0.5 }}
+                    >
+                      <CloseIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
+                  </Stack>
+                }
+              />
+            );
+          })}
+        </Tabs>
+        <IconButton onClick={onOpenNewTab} aria-label="Добавить вкладку" size="small">
+          <AddIcon sx={{ fontSize: 18 }} />
+        </IconButton>
+      </Stack>
 
-      <div className="flex flex-1 flex-col items-center px-6 py-8 text-center">
-        <div className="mb-5 flex items-center gap-1.5 self-start font-mono text-[11px] uppercase tracking-wide text-stone-500">
-          <FolderOutlinedIcon fontSize="small" />
-          {breadcrumbs.map((crumb, index) => (
-            <span key={crumb} className="flex items-center gap-1.5">
-              <span className="rounded-full border border-stone-300 bg-white px-2.5 py-0.5 normal-case tracking-normal text-stone-600">
-                {crumb}
-              </span>
-              {index < breadcrumbs.length - 1 && <span className="text-stone-300">/</span>}
-            </span>
+      <Box sx={{ p: 2, minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
+          <FolderOutlinedIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
+          {breadcrumbs.map((crumb) => (
+            <Chip key={crumb} size="small" label={crumb} variant="outlined" />
           ))}
-        </div>
+        </Stack>
 
-        <div className="mt-8 max-w-[520px]">
-          <div className="font-serif text-[36px] font-semibold leading-tight text-stone-900">Txt Doc</div>
-          <div className="mt-1 font-serif text-[20px] italic leading-tight text-stone-500">Аналог Obsidian</div>
-          <p className="mx-auto mt-4 max-w-[420px] text-[15px] leading-6 text-stone-600">
-            В себе хранит текст, ссылки на файлы и связи между документами комнаты.
-          </p>
+        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, minHeight: 0, flex: 1 }}>
+          <Paper variant="outlined" sx={{ p: 2, display: 'flex', minHeight: 0, flexDirection: 'column', bgcolor: 'grey.50' }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ pb: 1, borderBottom: 1, borderColor: 'divider' }}>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="subtitle2" noWrap>
+                  {activeDocument.name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {activeDocument.summary}
+                </Typography>
+              </Box>
+              <DescriptionOutlinedIcon sx={{ color: 'warning.main', fontSize: 18 }} />
+            </Stack>
 
-          <div className="mx-auto mt-12 w-[360px] rounded-lg border border-stone-200 bg-white p-4 text-left shadow-lg shadow-stone-200/60">
-            <div className="flex items-center justify-between border-b border-stone-100 pb-2">
-              <div className="text-[14px] font-medium text-stone-800">{activeDocument.name}</div>
-              <DescriptionOutlinedIcon sx={{ fontSize: 16 }} className="text-amber-600" />
-            </div>
-            <div className="mt-2 text-[12px] text-stone-500">{activeDocument.summary}</div>
-            <textarea
-              className="mt-3 min-h-[180px] w-full rounded-md border border-stone-200 bg-stone-50 p-3 text-[14px] leading-6 text-stone-800 outline-none transition focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/20"
+            <TextField
+              multiline
+              minRows={16}
               value={activeDocument.content}
               onChange={(event) => onUpdateTextContent(activeDocument.id, event.target.value)}
+              sx={{ mt: 2, flex: 1, '& .MuiInputBase-root': { height: '100%', alignItems: 'flex-start' } }}
+              slotProps={{ input: { sx: { fontFamily: 'monospace', fontSize: 14, lineHeight: 1.7 } } }}
             />
-            <div className="mt-3 flex flex-wrap gap-1.5">
+
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 2 }}>
               {activeDocument.links?.map((link) => (
-                <span
+                <Chip
                   key={link}
-                  className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-mono text-[11px] text-amber-800"
-                >
-                  <DescriptionOutlinedIcon sx={{ fontSize: 13 }} />
-                  {link}
-                </span>
+                  size="small"
+                  icon={<DescriptionOutlinedIcon sx={{ fontSize: 14 }} />}
+                  label={link}
+                  variant="outlined"
+                  color="warning"
+                />
               ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+            </Stack>
+          </Paper>
+
+          <Paper variant="outlined" sx={{ p: 2, display: 'flex', minHeight: 0, flexDirection: 'column' }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+              {selectedMediaPreview?.mediaType === 'picture' ? (
+                <ImageOutlinedIcon sx={{ color: 'warning.main', fontSize: 18 }} />
+              ) : (
+                <MusicNoteIcon sx={{ color: 'warning.main', fontSize: 18 }} />
+              )}
+              <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+                Центральный предпросмотр медиа
+              </Typography>
+            </Stack>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+              {selectedMediaPreview ? selectedMediaPreview.item.name : 'Файл не выбран'}
+            </Typography>
+            <Box
+              sx={{
+                mt: 2,
+                p: 2,
+                flex: 1,
+                overflow: 'auto',
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 1,
+                bgcolor: 'grey.50',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {renderMediaPreview()}
+            </Box>
+          </Paper>
+        </Box>
+      </Box>
+    </Box>
   );
 }

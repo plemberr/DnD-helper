@@ -1,4 +1,3 @@
-import { mockPlayerCharacters } from '../data/mockPlayerCharacters';
 import {
   calculateCharacterStats,
   type CharacterDraft,
@@ -36,11 +35,8 @@ export async function getPlayerCharacter(
   const storedCharacter = readStoredCharacters().find(
     (character) => character.roomId === roomId && character.userId === userId,
   );
-  const mockCharacter = mockPlayerCharacters.find(
-    (character) => character.roomId === roomId && character.userId === userId,
-  );
 
-  return storedCharacter ?? mockCharacter ?? null;
+  return storedCharacter ?? null;
 }
 
 export async function createPlayerCharacter(
