@@ -7,6 +7,7 @@ import RegisterPage from './pages/RegisterPage';
 import RoomsPage from './pages/RoomsPage';
 import { AdminPage } from './pages/AdminPage';
 import { RoomPage } from './pages/RoomPage';
+import PlayerRoomPage from './pages/PlayerRoomPage';
 
 const appTheme = createTheme({
   palette: {
@@ -49,6 +50,7 @@ function App() {
 
             <Route path="/admin" element={<AdminRoute />} />
             <Route path="/room" element={<RoomRoute />} />
+            <Route path="/room/:roomId" element={<PlayerRoomPage />} />
 
             <Route path="*" element={<Navigate to="/rooms" replace />} />
           </Routes>
