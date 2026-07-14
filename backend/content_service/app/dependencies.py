@@ -1,12 +1,13 @@
 from typing import Optional
 
+import httpx
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from content_service.app import security
-from content_service.app.clients.room_client import fetch_room_master_id
+from content_service.app.config import settings
 from content_service.app.db import get_db
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -66,13 +67,32 @@ async def require_room_master(
     """
     FastAPI-зависимость: требует, чтобы текущий пользователь был мастером указанной комнаты.
     Сначала проверяет валидность токена (через get_current_user_id), затем
-    запрашивает у room_service, кто является мастером комнаты room_id,
-    и сравнивает с id текущего пользователя.
+    запрашивает у room_service список участников комнаты room_id, находит среди них мастера
+    и сравнивает его id с id текущего пользователя.
     :param room_id: id комнаты, для которой проверяются права
     :param user_id: id текущего пользователя (из токена)
     :return: id пользователя (совпадает с id мастера комнаты)
     """
-    master_id = await fetch_room_master_id(room_id)
+    async with httpx.AsyncClient(timeout=settings.room_service_timeout_seconds) as client:
+        try:
+            response = await client.get(f"{settings.room_service_url}/rooms/{room_id}/members")
+        except httpx.RequestError:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Room service недоступен")
+
+    if response.status_code == status.HTTP_404_NOT_FOUND:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Комната не найдена")
+    if response.status_code != status.HTTP_200_OK:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Не удалось получить данные комнаты")
+
+    master_id = None
+    for member in response.json()["items"]:
+        if member["role"] == "master":
+            master_id = member["user_id"]
+            break
+
+    if master_id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Мастер комнаты не найден")
+
     if master_id != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Требуются права мастера комнаты")
     return user_id

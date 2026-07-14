@@ -3,13 +3,20 @@ from sqlalchemy import Integer, String, DateTime, Column, ForeignKey, func
 from enum import StrEnum
 from sqlalchemy import Enum as SAEnum
 
+
 class Status(StrEnum):
+    """Статус заявки на вступление в комнату."""
+
     pending = 'pending'
     accepted = 'accepted'
     rejected = 'rejected'
 
+
 class JoinRequests(Base):
+    """Модель заявки на вступление в комнату."""
+
     __tablename__ = 'join_requests'
+
     id = Column(Integer, primary_key=True)
     room_id = Column(Integer, ForeignKey('rooms.id'), nullable=False)
     user_id = Column(Integer, nullable=False)

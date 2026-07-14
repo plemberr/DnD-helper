@@ -3,8 +3,6 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 
-# document folders
-
 class DocumentFolderCreate(BaseModel):
     """Данные для создания папки документов."""
     name: str
@@ -27,8 +25,6 @@ class DocumentFolderOut(BaseModel):
     created_at: datetime
 
 
-# media folders
-
 class MediaFolderCreate(BaseModel):
     """Данные для создания медиапапки."""
     name: str
@@ -46,8 +42,6 @@ class MediaFolderOut(BaseModel):
     room_id: int
     name: str
 
-
-# documents
 
 class DocumentCreate(BaseModel):
     """Данные для создания документа."""
@@ -79,8 +73,6 @@ class DocumentOut(DocumentListItem):
     content: str
 
 
-# media files (images / audio)
-
 class MediaFileOut(BaseModel):
     """Медиафайл (изображение или аудио) в ответе API."""
     model_config = ConfigDict(from_attributes=True)
@@ -95,8 +87,6 @@ class MediaFileOut(BaseModel):
     is_favorite: bool = False
     created_at: datetime
 
-
-# favorites
 
 class FavoriteBase(BaseModel):
     """Общие поля, определяющие сущность избранного (документ или медиафайл)."""
@@ -121,8 +111,6 @@ class FavoriteListItem(FavoriteBase):
     title: str
     added_at: datetime | None
 
-
-# search
 
 class SearchResultItem(BaseModel):
     """Элемент результата глобального поиска (документ или медиафайл)."""
