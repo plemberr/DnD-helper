@@ -1,8 +1,13 @@
 from sqlalchemy import Integer, String, DateTime, func, Column
+
 from common.db import Base
 
+
 class User(Base):
-    __tablename__ = 'users'
+    """Модель пользователя системы."""
+
+    __tablename__ = "users"
+
     id = Column(Integer, primary_key=True)
     username = Column(String(50), unique=True, nullable=False)
     email = Column(String(255), unique=True, nullable=False)
