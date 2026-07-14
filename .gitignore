@@ -13,3 +13,4 @@ keys/*.pem
 venv/
 /DND_frontend/package-lock.json
 *.pem
+media_storage/
