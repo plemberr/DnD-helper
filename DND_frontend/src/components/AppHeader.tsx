@@ -13,21 +13,13 @@ export function AppHeader({ isRoomScreen, onOpenRoom, onOpenAdmin }: AppHeaderPr
 
   return (
     <header className="flex h-14 w-full items-center border-b-2 border-amber-500 bg-[#292420] px-5 text-white shadow-sm">
-      <div className="flex items-baseline gap-2">
-        <span className="font-serif text-[22px] font-semibold tracking-tight">Dnd</span>
-        <span className="hidden font-mono text-[10px] uppercase tracking-[0.25em] text-stone-400 sm:inline">
-          workspace
-        </span>
-      </div>
-
-      <div className="ml-auto mr-3 flex items-center gap-2">
-        <button
-          type="button"
-          className="flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-[#f2ede4] transition hover:bg-[#f2ede4]/10"
-          aria-label="Скопировать ссылку"
-        >
-          <ContentCopyOutlinedIcon sx={{ fontSize: 18 }} />
-        </button>
+      <div className="flex items-center gap-4">
+        <div className="flex items-baseline gap-2">
+          <span className="font-serif text-[22px] font-semibold tracking-tight">Dnd</span>
+          <span className="hidden font-mono text-[10px] uppercase tracking-[0.25em] text-stone-400 sm:inline">
+            workspace
+          </span>
+        </div>
 
         <div className="flex items-center rounded-full border border-white/10 bg-white/5 p-1 text-[12px]">
           <button
@@ -51,7 +43,14 @@ export function AppHeader({ isRoomScreen, onOpenRoom, onOpenAdmin }: AppHeaderPr
         </div>
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="ml-auto flex items-center gap-3">
+        <button
+          type="button"
+          className="flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-[#f2ede4] transition hover:bg-[#f2ede4]/10"
+          aria-label="Скопировать ссылку"
+        >
+          <ContentCopyOutlinedIcon sx={{ fontSize: 18 }} />
+        </button>
         <button
           type="button"
           onClick={() => navigate('/profile')}

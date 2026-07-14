@@ -4,6 +4,9 @@ import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import { useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   Box,
   Chip,
@@ -13,6 +16,8 @@ import {
   Tab,
   Tabs,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import type { TextFileNode } from '../../data/library';
@@ -48,6 +53,66 @@ export function DocumentWorkspace({
   onUpdateTextContent,
 }: DocumentWorkspaceProps) {
   const selectedMediaPreview = useMediaLibraryStore((state) => state.selectedMediaPreview);
+  const editorRef = useRef<HTMLTextAreaElement | null>(null);
+  const [editorMode, setEditorMode] = useState<'preview' | 'edit'>('preview');
+
+  const updateDocumentContent = (nextContent: string) => {
+    onUpdateTextContent(activeDocument.id, nextContent);
+  };
+
+  const applyWrapSyntax = (left: string, right: string, placeholder: string) => {
+    const editor = editorRef.current;
+    if (!editor) {
+      return;
+    }
+
+    const { selectionStart, selectionEnd, value } = editor;
+    const selectedText = value.slice(selectionStart, selectionEnd);
+    const insertedText = selectedText || placeholder;
+    const nextValue = `${value.slice(0, selectionStart)}${left}${insertedText}${right}${value.slice(selectionEnd)}`;
+    const cursorStart = selectionStart + left.length;
+    const cursorEnd = cursorStart + insertedText.length;
+
+    updateDocumentContent(nextValue);
+
+    requestAnimationFrame(() => {
+      const updatedEditor = editorRef.current;
+      if (!updatedEditor) {
+        return;
+      }
+      updatedEditor.focus();
+      updatedEditor.setSelectionRange(cursorStart, cursorEnd);
+    });
+  };
+
+  const applyLinePrefix = (prefix: string) => {
+    const editor = editorRef.current;
+    if (!editor) {
+      return;
+    }
+
+    const { selectionStart, selectionEnd, value } = editor;
+    const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+    const lineEndCandidate = value.indexOf('\n', selectionEnd);
+    const lineEnd = lineEndCandidate === -1 ? value.length : lineEndCandidate;
+    const selectedBlock = value.slice(lineStart, lineEnd);
+    const updatedBlock = selectedBlock
+      .split('\n')
+      .map((line) => `${prefix}${line}`)
+      .join('\n');
+    const nextValue = `${value.slice(0, lineStart)}${updatedBlock}${value.slice(lineEnd)}`;
+
+    updateDocumentContent(nextValue);
+
+    requestAnimationFrame(() => {
+      const updatedEditor = editorRef.current;
+      if (!updatedEditor) {
+        return;
+      }
+      updatedEditor.focus();
+      updatedEditor.setSelectionRange(lineStart, lineStart + updatedBlock.length);
+    });
+  };
 
   const renderMediaPreview = () => {
     if (!selectedMediaPreview || selectedMediaPreview.item.kind === 'folder') {
@@ -62,7 +127,7 @@ export function DocumentWorkspace({
       if (!selectedMediaPreview.item.fileUrl) {
         return (
           <Typography variant="body2" color="text.secondary">
-            Для предпросмотра картинки загрузите файл через кнопку "+" в библиотеке.
+            Для предпросмотра картинки загрузите файл через кнопку " + " в библиотеке.
           </Typography>
         );
       }
@@ -119,7 +184,13 @@ export function DocumentWorkspace({
           onChange={(_, value) => onSetActiveTabId(value)}
           variant="scrollable"
           scrollButtons="auto"
-          sx={{ minHeight: 38, flex: 1, '& .MuiTab-root': { minHeight: 38, py: 0.5 } }}
+          sx={{
+            minHeight: 38,
+            flex: 1,
+            '& .MuiTab-root': { minHeight: 38, py: 0.5, color: 'text.secondary' },
+            '& .MuiTab-root.Mui-selected': { color: 'text.primary' },
+            '& .MuiTabs-indicator': { bgcolor: 'warning.main' },
+          }}
         >
           {tabs.map((tab) => {
             const tabDocument = getTabDocument(tab.documentId);
@@ -176,14 +247,103 @@ export function DocumentWorkspace({
               <DescriptionOutlinedIcon sx={{ color: 'warning.main', fontSize: 18 }} />
             </Stack>
 
-            <TextField
-              multiline
-              minRows={16}
-              value={activeDocument.content}
-              onChange={(event) => onUpdateTextContent(activeDocument.id, event.target.value)}
-              sx={{ mt: 2, flex: 1, '& .MuiInputBase-root': { height: '100%', alignItems: 'flex-start' } }}
-              slotProps={{ input: { sx: { fontFamily: 'monospace', fontSize: 14, lineHeight: 1.7 } } }}
-            />
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 2 }}>
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                <Chip size="small" label="H1" variant="outlined" onClick={() => applyLinePrefix('# ')} />
+                <Chip size="small" label="H2" variant="outlined" onClick={() => applyLinePrefix('## ')} />
+                <Chip size="small" label="B" variant="outlined" onClick={() => applyWrapSyntax('**', '**', 'жирный текст')} />
+                <Chip size="small" label="I" variant="outlined" onClick={() => applyWrapSyntax('*', '*', 'курсив')} />
+                <Chip size="small" label="S" variant="outlined" onClick={() => applyWrapSyntax('~~', '~~', 'зачеркнуто')} />
+                <Chip size="small" label="•" variant="outlined" onClick={() => applyLinePrefix('- ')} />
+                <Chip size="small" label="☑" variant="outlined" onClick={() => applyLinePrefix('- [ ] ')} />
+                <Chip size="small" label="Quote" variant="outlined" onClick={() => applyLinePrefix('> ')} />
+                <Chip size="small" label="Link" variant="outlined" onClick={() => applyWrapSyntax('[', '](https://)', 'текст')} />
+                <Chip size="small" label="Code" variant="outlined" onClick={() => applyWrapSyntax('`', '`', 'code')} />
+              </Stack>
+              <ToggleButtonGroup
+                size="small"
+                exclusive
+                value={editorMode}
+                onChange={(_, value) => {
+                  if (value) {
+                    setEditorMode(value);
+                  }
+                }}
+                sx={{
+                  '& .MuiToggleButton-root': { color: 'text.secondary', borderColor: 'divider', textTransform: 'none' },
+                  '& .MuiToggleButton-root.Mui-selected': { color: 'text.primary', bgcolor: 'grey.100' },
+                }}
+              >
+                <ToggleButton value="preview">Просмотр</ToggleButton>
+                <ToggleButton value="edit">Редактирование</ToggleButton>
+              </ToggleButtonGroup>
+            </Stack>
+
+            {editorMode === 'edit' ? (
+              <TextField
+                multiline
+                minRows={16}
+                value={activeDocument.content}
+                onChange={(event) => updateDocumentContent(event.target.value)}
+                inputRef={editorRef}
+                sx={{
+                  mt: 2,
+                  flex: 1,
+                  '& .MuiInputBase-root': { height: '100%', alignItems: 'flex-start' },
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'background.paper',
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.secondary' },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'warning.main' },
+                  },
+                }}
+                slotProps={{ input: { sx: { fontFamily: 'monospace', fontSize: 14, lineHeight: 1.7 } } }}
+              />
+            ) : (
+              <Box
+                sx={{
+                  mt: 2,
+                  p: 2,
+                  flex: 1,
+                  overflow: 'auto',
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  bgcolor: 'background.paper',
+                  '& h1, & h2, & h3': { mt: 2, mb: 1, lineHeight: 1.3 },
+                  '& h1': { fontSize: 28 },
+                  '& h2': { fontSize: 22 },
+                  '& p': { my: 1.2 },
+                  '& ul, & ol': { pl: 3, my: 1.2 },
+                  '& blockquote': {
+                    borderLeft: 3,
+                    borderColor: 'warning.main',
+                    pl: 1.5,
+                    mx: 0,
+                    color: 'text.secondary',
+                  },
+                  '& code': {
+                    fontFamily: 'monospace',
+                    bgcolor: 'grey.100',
+                    px: 0.5,
+                    borderRadius: 0.5,
+                  },
+                  '& pre': {
+                    p: 1.5,
+                    borderRadius: 1,
+                    bgcolor: 'grey.100',
+                    overflow: 'auto',
+                  },
+                  '& a': {
+                    color: 'warning.dark',
+                  },
+                }}
+              >
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {activeDocument.content || '### Пустой документ\n\nПереключите в режим редактирования и начните писать.'}
+                </ReactMarkdown>
+              </Box>
+            )}
 
             <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 2 }}>
               {activeDocument.links?.map((link) => (
