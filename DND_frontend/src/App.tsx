@@ -1,11 +1,18 @@
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
-import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useNavigate,
+} from 'react-router-dom';
+
 import { AuthProvider } from './context/AuthContext';
+import { AdminPage } from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
+import PlayerRoomPage from './pages/PlayerRoomPage';
 import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
-import RoomsPage from './pages/RoomsPage';
-import { AdminPage } from './pages/AdminPage';
 import { RoomPage } from './pages/RoomPage';
 import { fantasyTheme } from './theme/fantasyTheme';
 
@@ -46,6 +53,7 @@ function App() {
   return (
     <ThemeProvider theme={appTheme}>
       <CssBaseline />
+
       <BrowserRouter>
         <AuthProvider>
           <Routes>
@@ -58,6 +66,7 @@ function App() {
 
             <Route path="/admin" element={<AdminRoute />} />
             <Route path="/room" element={<RoomRoute />} />
+            <Route path="/room/:roomId" element={<PlayerRoomPage />} />
 
             <Route path="*" element={<Navigate to="/rooms" replace />} />
           </Routes>

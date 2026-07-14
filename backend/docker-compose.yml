@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app_pass}
       POSTGRES_DB: ${POSTGRES_DB:-app_db}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - app_db_data:/var/lib/postgresql/data
     healthcheck:
@@ -26,6 +26,7 @@ services:
     volumes:
       - ./migrations:/app/migrations
       - ./keys:/app/keys:ro
+      - ./media_storage:/app/media_storage
     depends_on:
       db:
         condition: service_healthy
@@ -35,14 +36,21 @@ services:
       JWT_ALGORITHM: RS256
       JWT_PRIVATE_KEY_PATH: keys/private.pem
       JWT_PUBLIC_KEY_PATH: keys/public.pem
-      ACCESS_TOKEN_EXPIRE_MINUTES: 15
-      REFRESH_TOKEN_EXPIRE_DAYS: 30
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-30}
 
-      AUTH_SERVICE_URL: http://localhost:8001
+      AUTH_SERVICE_PORT: ${AUTH_SERVICE_PORT:-8001}
+      ROOM_SERVICE_PORT: ${ROOM_SERVICE_PORT:-8002}
+      CONTENT_SERVICE_PORT: ${CONTENT_SERVICE_PORT:-8003}
+
+      AUTH_SERVICE_URL: http://localhost:${AUTH_SERVICE_PORT:-8001}
+      ROOM_SERVICE_URL: http://localhost:${ROOM_SERVICE_PORT:-8002}
+      CONTENT_SERVICE_URL: http://localhost:${CONTENT_SERVICE_PORT:-8003}
 
     ports:
-      - "8001:8001"
-      - "8002:8002"
+      - "${AUTH_SERVICE_PORT:-8001}:${AUTH_SERVICE_PORT:-8001}"
+      - "${ROOM_SERVICE_PORT:-8002}:${ROOM_SERVICE_PORT:-8002}"
+      - "${CONTENT_SERVICE_PORT:-8003}:${CONTENT_SERVICE_PORT:-8003}"
 
 volumes:
   app_db_data:
