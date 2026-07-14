@@ -1,14 +1,11 @@
-from functools import lru_cache
 from pathlib import Path
 
 from common.config import CommonSettings
 
 
 class Settings(CommonSettings):
+    """Конфигурация сервиса аутентификации."""
 
-    # БД из общего config
-
-    # JWT
     jwt_algorithm: str = "RS256"
     jwt_private_key_path: str = "keys/private.pem"
     jwt_public_key_path: str = "keys/public.pem"
@@ -17,15 +14,12 @@ class Settings(CommonSettings):
     refresh_token_expire_days: int = 30
 
 
-@lru_cache
-def get_settings() -> Settings:
-    return Settings()
-
-
-settings = get_settings()
+settings = Settings()
 
 
 def _read_key(path: str) -> str:
+    """Считывает JWT-ключ из файла."""
+
     key_path = Path(path)
     if not key_path.is_file():
         raise FileNotFoundError(

@@ -9,18 +9,18 @@ echo "starting auth-service"
 
 uvicorn auth_service.app.main:app \
     --host 0.0.0.0 \
-    --port 8001 &
+    --port "${AUTH_SERVICE_PORT:-8001}" &
 
 echo "starting room-service"
 
 uvicorn room_service.app.main:app \
     --host 0.0.0.0 \
-    --port 8002 &
+    --port "${ROOM_SERVICE_PORT:-8002}" &
 
 echo "starting content-service"
 
 uvicorn content_service.app.main:app \
     --host 0.0.0.0 \
-    --port 8003 &
+    --port "${CONTENT_SERVICE_PORT:-8003}" &
 
 wait
