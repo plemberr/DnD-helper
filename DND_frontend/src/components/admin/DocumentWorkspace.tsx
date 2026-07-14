@@ -21,6 +21,8 @@ import {
   Typography,
 } from '@mui/material';
 import type { TextFileNode } from '../../data/library';
+import { ornateCornersSx } from '../../theme/fantasyTheme';
+import { FantasyAudioPlayer } from '../audio/FantasyAudioPlayer';
 import { useMediaLibraryStore } from '../../store/mediaLibraryStore';
 
 type TabState = {
@@ -155,12 +157,9 @@ export function DocumentWorkspace({
     return (
       <Stack spacing={2} sx={{ width: '100%', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
         <Typography variant="subtitle2">{selectedMediaPreview.item.name}</Typography>
-        <Box
-          component="audio"
-          controls
-          src={selectedMediaPreview.item.fileUrl}
-          sx={{ width: '100%', maxWidth: 520 }}
-        />
+        <Box sx={{ width: '100%', maxWidth: 520 }}>
+          <FantasyAudioPlayer src={selectedMediaPreview.item.fileUrl} />
+        </Box>
       </Stack>
     );
   };
@@ -234,7 +233,7 @@ export function DocumentWorkspace({
         </Stack>
 
         <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, minHeight: 0, flex: 1 }}>
-          <Paper variant="outlined" sx={{ p: 2, display: 'flex', minHeight: 0, flexDirection: 'column', bgcolor: 'grey.50' }}>
+          <Paper variant="outlined" sx={{ ...ornateCornersSx, p: 2, display: 'flex', minHeight: 0, flexDirection: 'column', bgcolor: 'grey.50' }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ pb: 1, borderBottom: 1, borderColor: 'divider' }}>
               <Box sx={{ minWidth: 0 }}>
                 <Typography variant="subtitle2" noWrap>
@@ -359,7 +358,7 @@ export function DocumentWorkspace({
             </Stack>
           </Paper>
 
-          <Paper variant="outlined" sx={{ p: 2, display: 'flex', minHeight: 0, flexDirection: 'column' }}>
+          <Paper variant="outlined" sx={{ ...ornateCornersSx, p: 2, display: 'flex', minHeight: 0, flexDirection: 'column' }}>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
               {selectedMediaPreview?.mediaType === 'picture' ? (
                 <ImageOutlinedIcon sx={{ color: 'warning.main', fontSize: 18 }} />

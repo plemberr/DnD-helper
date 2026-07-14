@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { Box } from '@mui/material';
+import { fantasyPageBackground } from '../theme/fantasyTheme';
 import { AppHeader } from '../components/AppHeader';
 import { DocumentTreeSidebar } from '../components/admin/DocumentTreeSidebar';
 import { DocumentWorkspace } from '../components/admin/DocumentWorkspace';
@@ -231,7 +232,7 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
   };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', width: '100%', flexDirection: 'column', overflowX: 'hidden', bgcolor: 'grey.100', color: 'text.primary' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', width: '100%', flexDirection: 'column', overflowX: 'hidden', background: fantasyPageBackground, color: 'text.primary' }}>
       <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
         <AppHeader isRoomScreen={false} onOpenAdmin={onOpenAdmin} onOpenRoom={onOpenRoom} />
 
