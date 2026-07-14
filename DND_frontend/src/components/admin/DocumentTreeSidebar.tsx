@@ -13,7 +13,7 @@ import type { FolderNode, MediaType, TreeNode } from '../../data/library';
 
 const MEDIA_LIBRARY_DND_MIME = 'application/x-tenzor-media-library-item';
 
-type SidebarDragKind = 'folder' | 'document';
+type SidebarDragKind = 'folder' | 'document' | MediaType;
 
 type SidebarDragState =
   | {
@@ -99,6 +99,7 @@ export function DocumentTreeSidebar({
       const isSelectedMedia = child.kind !== 'folder' && child.kind === selectedMediaType;
       const isSelected = isSelectedDocument || isSelectedMedia;
       const isNestedFolderExpanded = child.kind === 'folder' && expandedFolders[child.id];
+      const isFileNode = child.kind !== 'folder';
 
       return (
         <Box key={child.id} sx={{ mb: 0.5 }}>
@@ -206,7 +207,7 @@ export function DocumentTreeSidebar({
               </>
             )}
 
-            {child.kind === 'document' && (
+            {isFileNode && (
               <>
                 <IconButton
                   size="small"
@@ -223,7 +224,7 @@ export function DocumentTreeSidebar({
                   onDragStart={(event) => {
                     event.dataTransfer.effectAllowed = 'move';
                     onSetDragState({
-                      kind: 'document',
+                      kind: child.kind,
                       id: child.id,
                       sourceFolderId: parentFolderId,
                     });

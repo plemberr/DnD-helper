@@ -1,10 +1,5 @@
 import { createTheme, type SxProps, type Theme } from '@mui/material';
 
-/**
- * Dark "tavern / BG3" fantasy palette used by the admin and room screens.
- * Exposed as raw tokens so components can reference exact colors when a
- * theme palette slot is not expressive enough (gradients, glows, etc.).
- */
 export const fantasyTokens = {
   bgDeepest: '#0c0908',
   bgPage: '#100b09',
@@ -21,8 +16,6 @@ export const fantasyTokens = {
   textPrimary: '#ece2d0',
   textSecondary: '#9c8b76',
   textDisabled: '#6d5e4d',
-  bloodDark: '#2a0f11',
-  blood: '#5a1d1f',
   bloodBright: '#a12d2c',
 } as const;
 
@@ -40,7 +33,6 @@ export const fantasyTheme = createTheme({
       light: fantasyTokens.goldLight,
       dark: fantasyTokens.goldDark,
       contrastText: '#1a120a',
-      // extra shades referenced across the admin components
       50: fantasyTokens.goldSofter,
       100: fantasyTokens.goldSoft,
     } as never,
@@ -192,10 +184,7 @@ export const fantasyTheme = createTheme({
   },
 });
 
-/**
- * Decorative L-shaped gold brackets on the corners of a panel, matching the
- * reference art. Apply to a Box/Paper that has `position: relative`.
- */
+
 export const ornateCornersSx: SxProps<Theme> = {
   position: 'relative',
   '&::before, &::after': {
@@ -220,5 +209,4 @@ export const ornateCornersSx: SxProps<Theme> = {
   },
 };
 
-/** Radial vignette page background used behind the admin/room layouts. */
 export const fantasyPageBackground = `radial-gradient(1200px 600px at 50% -10%, ${fantasyTokens.bgPanel} 0%, ${fantasyTokens.bgPage} 45%, ${fantasyTokens.bgDeepest} 100%)`;
