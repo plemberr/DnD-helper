@@ -1,12 +1,20 @@
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
-import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useNavigate,
+} from 'react-router-dom';
+
 import { AuthProvider } from './context/AuthContext';
+import { AdminPage } from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
+import PlayerRoomPage from './pages/PlayerRoomPage';
 import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
-import RoomsPage from './pages/RoomsPage';
-import { AdminPage } from './pages/AdminPage';
 import { RoomPage } from './pages/RoomPage';
+import RoomsPage from './pages/RoomsPage';
 
 const appTheme = createTheme({
   palette: {
@@ -24,19 +32,30 @@ const appTheme = createTheme({
 function AdminRoute() {
   const navigate = useNavigate();
 
-  return <AdminPage onOpenAdmin={() => navigate('/admin')} onOpenRoom={() => navigate('/room')} />;
+  return (
+    <AdminPage
+      onOpenAdmin={() => navigate('/admin')}
+      onOpenRoom={() => navigate('/room')}
+    />
+  );
 }
 
 function RoomRoute() {
   const navigate = useNavigate();
 
-  return <RoomPage onOpenAdmin={() => navigate('/admin')} onOpenRoom={() => navigate('/room')} />;
+  return (
+    <RoomPage
+      onOpenAdmin={() => navigate('/admin')}
+      onOpenRoom={() => navigate('/room')}
+    />
+  );
 }
 
 function App() {
   return (
     <ThemeProvider theme={appTheme}>
       <CssBaseline />
+
       <BrowserRouter>
         <AuthProvider>
           <Routes>
@@ -49,6 +68,7 @@ function App() {
 
             <Route path="/admin" element={<AdminRoute />} />
             <Route path="/room" element={<RoomRoute />} />
+            <Route path="/room/:roomId" element={<PlayerRoomPage />} />
 
             <Route path="*" element={<Navigate to="/rooms" replace />} />
           </Routes>
