@@ -22,8 +22,7 @@ async def list_skills(
     :param db: сессия БД
     :return: список навыков (list[SkillOut])
     """
-    filter_parent = parent_id is not None
-    return await skills_repository.list_skills(db, type, parent_id, filter_parent=filter_parent)
+    return await skills_repository.list_skills(db, type, parent_id, filter_parent=parent_id is not None)
 
 
 @router.get("/skills/{skill_id}", response_model=schemas.SkillOut)

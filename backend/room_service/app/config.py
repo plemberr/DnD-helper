@@ -9,8 +9,11 @@ class Settings(CommonSettings):
     jwt_algorithm: str = "RS256"
     jwt_public_key_path: str = "keys/public.pem"
 
-    auth_service_url: str = "http://localhost:8001"
     auth_service_timeout_seconds: float = 5.0
+
+    @property
+    def auth_service_url(self) -> str:
+        return f"http://localhost:{self.auth_service_port}"
 
 
 settings = Settings()
