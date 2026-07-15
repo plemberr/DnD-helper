@@ -6,12 +6,19 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from content_service.app import security
+from content_service.app.config import PUBLIC_KEY
 from content_service.app.config import settings
 from content_service.app.db import get_db
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
+def decode_token(token: str) -> dict:
+    """
+    Декодирует и проверяет подпись JWT-токена, выпущенного auth_service.
+    :param token: access-токен из заголовка Authorization
+    :return: payload токена
+    """
+    return jwt.decode(token, PUBLIC_KEY, algorithms=[settings.jwt_algorithm])
 
 def _decode_access_token(token: str) -> int:
     """
@@ -25,7 +32,7 @@ def _decode_access_token(token: str) -> int:
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = security.decode_token(token)
+        payload = payload = decode_token(token)
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Access token истек")
     except jwt.InvalidTokenError:

@@ -23,4 +23,10 @@ uvicorn content_service.app.main:app \
     --host 0.0.0.0 \
     --port "${CONTENT_SERVICE_PORT:-8003}" &
 
+echo "starting knowledge-service"
+
+uvicorn knowledge_service.app.main:app \
+    --host 0.0.0.0 \
+    --port "${KNOWLEDGE_SERVICE_PORT:-8005}" &
+
 wait
