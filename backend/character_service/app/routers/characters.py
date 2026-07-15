@@ -6,7 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from character_service.app import schemas
 from character_service.app.db import get_db
 from character_service.app.dependencies import get_current_user_id
+from character_service.app.repositories import character_repository
+from character_service.app.services import character_items_service as items_svc
+from character_service.app.services import character_progression_service as progression_svc
 from character_service.app.services import character_service as svc
+from character_service.app.services.common import serialize_items, serialize_spells
 
 router = APIRouter(tags=["characters"])
 
@@ -77,7 +81,7 @@ async def delete_character(
 
 # заклинания
 @router.post(
-    "/characters/{character_id}/spells",
+    "/rooms/{room_id}/characters/{character_id}/spells",
     response_model=schemas.SpellAddOut,
     status_code=status.HTTP_201_CREATED,
 )
@@ -88,12 +92,12 @@ async def add_spell(
     db: AsyncSession = Depends(get_db),
 ):
     """Добавляет заклинание персонажу. room_id персонажа определяется по персонажу"""
-    character = await svc.character_repository.get_character_by_id(db, character_id)
+    character = await character_repository.get_character_by_id(db, character_id)
     if character is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Персонаж не найден")
 
-    character = await svc.add_spell(db, character.room_id, character_id, user_id, payload.spell_id)
-    return schemas.SpellAddOut(id=character.id, spells=svc._serialize_spells(character.spells))
+    character = await items_svc.add_spell(db, character.room_id, character_id, user_id, payload.spell_id)
+    return schemas.SpellAddOut(id=character.id, spells=serialize_spells(character.spells))
 
 
 @router.get("/rooms/{room_id}/characters/{character_id}/spells", response_model=schemas.SpellsOut)
@@ -103,7 +107,7 @@ async def get_spells(
     db: AsyncSession = Depends(get_db),
 ):
     """Возвращает список заклинаний персонажа"""
-    return await svc.get_spells(db, room_id, character_id)
+    return await items_svc.get_spells(db, room_id, character_id)
 
 
 @router.delete(
@@ -118,7 +122,7 @@ async def remove_spell(
     db: AsyncSession = Depends(get_db),
 ):
     """Удаляет заклинание у персонажа"""
-    await svc.remove_spell(db, room_id, character_id, user_id, spell_id)
+    await items_svc.remove_spell(db, room_id, character_id, user_id, spell_id)
 
 
 # инвентарь
@@ -131,8 +135,8 @@ async def set_inventory(
     db: AsyncSession = Depends(get_db),
 ):
     """Заменяет инвентарь персонажа новым набором"""
-    character = await svc.set_inventory(db, room_id, character_id, user_id, payload.inventory)
-    return schemas.InventoryOut(id=character.id, inventory=svc._serialize_items(character.inventory))
+    character = await items_svc.set_inventory(db, room_id, character_id, user_id, payload.inventory)
+    return schemas.InventoryOut(id=character.id, inventory=serialize_items(character.inventory))
 
 
 @router.get(
@@ -145,7 +149,7 @@ async def get_inventory(
     db: AsyncSession = Depends(get_db),
 ):
     """Возвращает инвентарь персонажа"""
-    return await svc.get_inventory(db, room_id, character_id)
+    return await items_svc.get_inventory(db, room_id, character_id)
 
 
 # черты
@@ -158,8 +162,8 @@ async def set_feats(
     db: AsyncSession = Depends(get_db),
 ):
     """Заменяет черты персонажа новым набором"""
-    character = await svc.set_feats(db, room_id, character_id, user_id, payload.feats)
-    return schemas.FeatsOut(id=character.id, feats=svc._serialize_items(character.feats))
+    character = await items_svc.set_feats(db, room_id, character_id, user_id, payload.feats)
+    return schemas.FeatsOut(id=character.id, feats=serialize_items(character.feats))
 
 
 @router.get(
@@ -172,7 +176,7 @@ async def get_feats(
     db: AsyncSession = Depends(get_db),
 ):
     """Возвращает черты персонажа"""
-    return await svc.get_feats(db, room_id, character_id)
+    return await items_svc.get_feats(db, room_id, character_id)
 
 
 # навыки
@@ -186,7 +190,7 @@ async def list_skills(
     db: AsyncSession = Depends(get_db),
 ):
     """Возвращает список навыков персонажа"""
-    items, total = await svc.list_skills(db, room_id, character_id)
+    items, total = await progression_svc.list_skills(db, room_id, character_id)
     return schemas.SkillsListResponse(items=items, total=total)
 
 
@@ -203,42 +207,8 @@ async def update_skill(
     db: AsyncSession = Depends(get_db),
 ):
     """Обновляет уровень владения навыком персонажа"""
-    skill = await svc.update_skill(db, room_id, character_id, user_id, skill_id, payload.level)
+    skill = await progression_svc.update_skill(db, room_id, character_id, user_id, skill_id, payload.level)
     return schemas.SkillItem(skill_id=skill.skill_id, level=skill.level, value=skill.value)
-
-
-# lvl up / lvl down
-@router.post(
-    "/rooms/{room_id}/characters/{character_id}/level-up",
-    response_model=schemas.LevelChangeOut,
-)
-async def level_up(
-    room_id: int,
-    character_id: int,
-    user_id: int = Depends(get_current_user_id),
-    db: AsyncSession = Depends(get_db),
-):
-    """Повышает уровень персонажа на 1, увеличивая hp_max и hp_current"""
-    character = await svc.level_up(db, room_id, character_id, user_id)
-    return schemas.LevelChangeOut(
-        id=character.id, level=character.level, hp_max=character.hp_max, hp_current=character.hp_current
-    )
-
-
-@router.post(
-    "/characters/{character_id}/level-down",
-    response_model=schemas.LevelChangeOut,
-)
-async def level_down(
-    character_id: int,
-    user_id: int = Depends(get_current_user_id),
-    db: AsyncSession = Depends(get_db),
-):
-    """Понижает уровень персонажа на 1, уменьшая hp_max"""
-    character = await svc.level_down(db, character_id, user_id)
-    return schemas.LevelChangeOut(
-        id=character.id, level=character.level, hp_max=character.hp_max, hp_current=character.hp_current
-    )
 
 
 # HP
@@ -250,8 +220,8 @@ async def change_hp(
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Изменяет текущее HP персонажа, ограничивая результат диапазоном [0, hp_max]"""
-    character = await svc.change_hp(db, room_id, character_id, user_id, payload.delta)
+    """Изменяет текущее HP персонажа"""
+    character = await progression_svc.change_hp(db, room_id, character_id, user_id, payload.delta)
     return schemas.HpOut(id=character.id, hp_current=character.hp_current, hp_max=character.hp_max)
 
 
@@ -268,7 +238,7 @@ async def grant_inspiration(
     db: AsyncSession = Depends(get_db),
 ):
     """Начисляет персонажу очки вдохновения"""
-    character = await svc.grant_inspiration(db, room_id, character_id, user_id, payload.amount)
+    character = await progression_svc.grant_inspiration(db, room_id, character_id, user_id, payload.amount)
     return schemas.InspirationOut(id=character.id, inspiration=character.inspiration)
 
 
@@ -283,5 +253,5 @@ async def use_inspiration(
     db: AsyncSession = Depends(get_db),
 ):
     """Тратит одно очко вдохновения персонажа"""
-    character = await svc.use_inspiration(db, room_id, character_id, user_id)
+    character = await progression_svc.use_inspiration(db, room_id, character_id, user_id)
     return schemas.InspirationOut(id=character.id, inspiration=character.inspiration)

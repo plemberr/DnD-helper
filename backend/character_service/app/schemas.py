@@ -1,7 +1,25 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Generic, List, Optional, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
+
+T = TypeVar("T")
+
+
+class ORMModel(BaseModel):
+    """Базовая модель для схем, которые собираются напрямую из ORM-объектов (Character и т.п.)"""
+    model_config = ConfigDict(from_attributes=True)
+
+
+class IdMixin(ORMModel):
+    """Примешивает id — используется во всех "точечных" ответах об изменении персонажа"""
+    id: int
+
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    """Список элементов с общим количеством. Переиспользуется для любых списков с пагинацией"""
+    items: List[T]
+    total: int
 
 
 # инвентарь/черты
@@ -12,8 +30,28 @@ class Item(BaseModel):
     value: str
 
 
+class InventoryUpdate(BaseModel):
+    """Новый набор предметов инвентаря персонажа"""
+    inventory: List[Item]
+
+
+class InventoryOut(IdMixin):
+    """Инвентарь персонажа"""
+    inventory: List[Item]
+
+
+class FeatsUpdate(BaseModel):
+    """Новый набор черт персонажа"""
+    feats: List[Item]
+
+
+class FeatsOut(IdMixin):
+    """Черты персонажа"""
+    feats: List[Item]
+
+
 # заклинания
-class SpellsOut(BaseModel):
+class SpellsOut(ORMModel):
     """Список id известных персонажу заклинаний"""
     ids: List[str] = Field(default_factory=list)
 
@@ -23,13 +61,12 @@ class SpellAdd(BaseModel):
     spell_id: str
 
 
-class SpellAddOut(BaseModel):
+class SpellAddOut(IdMixin):
     """Результат добавления заклинания"""
-    id: int
     spells: SpellsOut
 
 
-# создание персонажа
+# создание/обновление персонажа
 class CharacterCreate(BaseModel):
     """Данные для создания персонажа"""
     name: str = Field(min_length=1, max_length=80)
@@ -46,11 +83,21 @@ class CharacterCreate(BaseModel):
     initiative: int
 
 
-# персонаж
-class CharacterBase(BaseModel):
-    """Общие поля персонажа, переиспользуемые в CharacterOut и CharacterUpdateOut"""
-    model_config = ConfigDict(from_attributes=True)
+class CharacterUpdate(BaseModel):
+    """Поля для обновления персонажа"""
+    name: Optional[str] = Field(default=None, min_length=1, max_length=80)
+    race: Optional[str] = Field(default=None, min_length=1, max_length=60)
+    character_class: Optional[str] = Field(default=None, min_length=1, max_length=60)
+    level: Optional[int] = Field(default=None, ge=1)
+    age: Optional[int] = None
+    weight: Optional[int] = None
+    height: Optional[int] = None
+    appearance: Optional[str] = None
 
+
+# персонаж (ответы собираются напрямую из ORM-модели Character через from_attributes)
+class CharacterBase(ORMModel):
+    """Общие поля персонажа, переиспользуемые во всех ответах о персонаже"""
     id: int
     user_id: int
     name: str
@@ -65,6 +112,11 @@ class CharacterBase(BaseModel):
     weight: int
     height: int
     appearance: str
+
+
+class CharacterUpdateOut(CharacterBase):
+    """Персонаж в ответе на обновление профиля (без служебных и игровых полей)"""
+    updated_at: datetime
 
 
 class CharacterOut(CharacterBase):
@@ -78,13 +130,27 @@ class CharacterOut(CharacterBase):
     updated_at: datetime
 
 
-class CharacterUpdateOut(CharacterBase):
-    """Персонаж в ответе на обновление профиля (без служебных и игровых полей)"""
-    updated_at: datetime
+# навыки
+class SkillItem(ORMModel):
+    """Владение навыком персонажа. Используется и в списках, и как результат обновления"""
+    skill_id: int
+    level: int
+    value: int
+
+
+class SkillUpdate(BaseModel):
+    """Данные для изменения уровня владения навыком"""
+    level: int = Field(ge=0, le=2)
+
+
+# детальный просмотр персонажа: те же поля, что и в CharacterOut, плюс список навыков
+class CharacterDetail(CharacterOut):
+    """Детальная информация о персонаже, включая навыки, инвентарь, черты и заклинания"""
+    skills: List[SkillItem] = Field(default_factory=list)
 
 
 # список персонажей в комнате
-class CharacterListItem(BaseModel):
+class CharacterListItem(ORMModel):
     """Персонаж в списке персонажей комнаты, только основные поля"""
     id: int
     name: str
@@ -95,117 +161,27 @@ class CharacterListItem(BaseModel):
     ac: int
 
 
-class CharactersListResponse(BaseModel):
+class CharactersListResponse(PaginatedResponse[CharacterListItem]):
     """Список персонажей комнаты с общим количеством"""
-    items: List[CharacterListItem]
-    total: int
 
 
-# навыки
-class SkillItem(BaseModel):
-    """Владение навыком персонажа. Используется и в списках, и как результат обновления"""
-    skill_id: int
-    level: int
-    value: int
-
-
-class SkillsListResponse(BaseModel):
+class SkillsListResponse(PaginatedResponse[SkillItem]):
     """Список навыков персонажа с общим количеством"""
-    items: List[SkillItem]
-    total: int
-
-
-class SkillUpdate(BaseModel):
-    """Данные для изменения уровня владения навыком"""
-    level: int = Field(ge=0, le=2)
-
-
-# детальный просмотр персонажа
-class CharacterDetail(BaseModel):
-    """Детальная информация о персонаже, включая навыки, инвентарь, черты и заклинания"""
-    id: int
-    user_id: int
-    name: str
-    race: str
-    character_class: str
-    level: int
-
-    hp_current: int
-    hp_max: int
-    ac: int
-    initiative: int
-
-    inspiration: int
-
-    age: Optional[int] = None
-    weight: int
-    height: int
-    appearance: str
-
-    skills: List[SkillItem]
-    inventory: List[Item]
-    spells: SpellsOut
-    feats: List[Item]
-
-    created_at: datetime
-    updated_at: datetime
-
-
-# персонаж обновление
-class CharacterUpdate(BaseModel):
-    """Поля для обновления персонажа"""
-    name: Optional[str] = Field(default=None, min_length=1, max_length=80)
-    race: Optional[str] = Field(default=None, min_length=1, max_length=60)
-    character_class: Optional[str] = Field(default=None, min_length=1, max_length=60)
-    age: Optional[int] = None
-    weight: Optional[int] = None
-    height: Optional[int] = None
-    appearance: Optional[str] = None
-
-
-# обновление инвентарь/черты
-class InventoryUpdate(BaseModel):
-    """Новый набор предметов инвентаря персонажа"""
-    inventory: List[Item]
-
-
-class InventoryOut(BaseModel):
-    """Инвентарь персонажа"""
-    id: int
-    inventory: List[Item]
-
-
-class FeatsUpdate(BaseModel):
-    """Новый набор черт персонажа"""
-    feats: List[Item]
-
-
-class FeatsOut(BaseModel):
-    """Черты персонажа"""
-    id: int
-    feats: List[Item]
-
-
-# lvl up / lvl down
-class LevelChangeOut(BaseModel):
-    """Результат изменения уровня персонажа"""
-    id: int
-    level: int
-    hp_max: int
-    hp_current: int
 
 
 # hp
+class HpFields(BaseModel):
+    hp_current: int
+    hp_max: int
+
+
 class HpUpdate(BaseModel):
     """Изменение текущего HP персонажа"""
     delta: int
 
 
-class HpOut(BaseModel):
+class HpOut(IdMixin, HpFields):
     """Текущее и максимальное HP персонажа"""
-    id: int
-    hp_current: int
-    hp_max: int
 
 
 # вдохновение
@@ -214,7 +190,6 @@ class InspirationGrant(BaseModel):
     amount: int = Field(default=1, ge=1)
 
 
-class InspirationOut(BaseModel):
+class InspirationOut(IdMixin):
     """Текущее количество очков вдохновения персонажа"""
-    id: int
     inspiration: int

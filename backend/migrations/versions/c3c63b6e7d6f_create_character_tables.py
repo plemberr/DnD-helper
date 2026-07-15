@@ -1,8 +1,8 @@
 """create character tables
 
-Revision ID: b368cb2f85b8
+Revision ID: c3c63b6e7d6f
 Revises: c02537c98474
-Create Date: 2026-07-15 02:41:16.045315
+Create Date: 2026-07-15 15:24:53.451768
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'b368cb2f85b8'
+revision: str = 'c3c63b6e7d6f'
 down_revision: Union[str, Sequence[str], None] = 'c02537c98474'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -38,9 +38,9 @@ def upgrade() -> None:
     sa.Column('weight', sa.Integer(), nullable=False),
     sa.Column('height', sa.Integer(), nullable=False),
     sa.Column('appearance', sa.Text(), nullable=False),
-    sa.Column('inventory', postgresql.JSONB(astext_type=sa.Text()), server_default='{}', nullable=False),
-    sa.Column('feats', postgresql.JSONB(astext_type=sa.Text()), server_default='{}', nullable=False),
-    sa.Column('spells', postgresql.JSONB(astext_type=sa.Text()), server_default='{}', nullable=False),
+    sa.Column('inventory', postgresql.JSONB(astext_type=sa.Text()), server_default='[]', nullable=False),
+    sa.Column('feats', postgresql.JSONB(astext_type=sa.Text()), server_default='[]', nullable=False),
+    sa.Column('spells', postgresql.JSONB(astext_type=sa.Text()), server_default='{"ids":[]}', nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
     sa.PrimaryKeyConstraint('id')
