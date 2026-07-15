@@ -14,7 +14,7 @@ import PlayerRoomPage from './pages/PlayerRoomPage';
 import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
 import { RoomPage } from './pages/RoomPage';
-import RoomsPage from './pages/RoomsPage';
+import { fantasyTheme } from './theme/fantasyTheme';
 
 const appTheme = createTheme({
   palette: {
@@ -33,10 +33,9 @@ function AdminRoute() {
   const navigate = useNavigate();
 
   return (
-    <AdminPage
-      onOpenAdmin={() => navigate('/admin')}
-      onOpenRoom={() => navigate('/room')}
-    />
+    <ThemeProvider theme={fantasyTheme}>
+      <AdminPage onOpenAdmin={() => navigate('/admin')} onOpenRoom={() => navigate('/room')} />
+    </ThemeProvider>
   );
 }
 
@@ -44,10 +43,9 @@ function RoomRoute() {
   const navigate = useNavigate();
 
   return (
-    <RoomPage
-      onOpenAdmin={() => navigate('/admin')}
-      onOpenRoom={() => navigate('/room')}
-    />
+    <ThemeProvider theme={fantasyTheme}>
+      <RoomPage onOpenAdmin={() => navigate('/admin')} onOpenRoom={() => navigate('/room')} />
+    </ThemeProvider>
   );
 }
 

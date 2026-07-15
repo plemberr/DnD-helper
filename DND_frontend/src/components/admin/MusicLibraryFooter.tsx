@@ -1,5 +1,6 @@
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { Box, Typography } from '@mui/material';
+import { FantasyAudioPlayer } from '../audio/FantasyAudioPlayer';
 import { useMediaLibraryStore } from '../../store/mediaLibraryStore';
 
 export function MusicLibraryFooter() {
@@ -34,12 +35,9 @@ export function MusicLibraryFooter() {
           Выберите музыку или звук в библиотеке справа, чтобы проиграть здесь.
         </Typography>
       </Box>
-      <Box
-        component="audio"
-        controls
-        src={hasPlayableAudio ? selectedAudioItem?.fileUrl : undefined}
-        sx={{ width: 360, maxWidth: '50%' }}
-      />
+      <Box sx={{ width: 420, maxWidth: '55%' }}>
+        <FantasyAudioPlayer src={hasPlayableAudio ? selectedAudioItem?.fileUrl : undefined} dense />
+      </Box>
     </Box>
   );
 }
