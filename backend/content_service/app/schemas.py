@@ -3,44 +3,26 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 
-class DocumentFolderCreate(BaseModel):
-    """Данные для создания папки документов."""
+class FolderCreate(BaseModel):
+    """Данные для создания папки (документов или медиа)."""
     name: str
     parent_folder_id: int | None = None
 
 
-class DocumentFolderUpdate(BaseModel):
-    """Поля для обновления папки документов (обновляются только переданные)."""
+class FolderUpdate(BaseModel):
+    """Поля для обновления папки (обновляются только переданные)."""
     name: str | None = None
     parent_folder_id: int | None = None
 
 
-class DocumentFolderOut(BaseModel):
-    """Папка документов в ответе API."""
-    model_config = ConfigDict(from_attributes=True)
-    id: int
-    room_id: int
-    parent_folder_id: int | None
-    name: str
-    created_at: datetime
-
-
-class MediaFolderCreate(BaseModel):
-    """Данные для создания медиапапки."""
-    name: str
-
-
-class MediaFolderUpdate(BaseModel):
-    """Поля для обновления медиапапки (обновляются только переданные)."""
-    name: str | None = None
-
-
-class MediaFolderOut(BaseModel):
-    """Медиапапка в ответе API."""
+class FolderOut(BaseModel):
+    """Папка (документов или медиа) в ответе API."""
     model_config = ConfigDict(from_attributes=True)
     id: int
     room_id: int
     name: str
+    parent_folder_id: int | None = None
+    created_at: datetime | None = None
 
 
 class DocumentCreate(BaseModel):
@@ -56,21 +38,17 @@ class DocumentUpdate(BaseModel):
     is_secret: bool | None = None
 
 
-class DocumentListItem(BaseModel):
-    """Документ без содержимого — используется в списках."""
+class DocumentOut(BaseModel):
+    """Документ в ответе API."""
     model_config = ConfigDict(from_attributes=True)
     id: int
     room_id: int
     folder_id: int | None
     title: str
+    content: str
     is_secret: bool
     created_by: int
     created_at: datetime
-
-
-class DocumentOut(DocumentListItem):
-    """Полный документ (с содержимым) — используется при получении одного документа."""
-    content: str
 
 
 class MediaFileOut(BaseModel):
@@ -88,28 +66,20 @@ class MediaFileOut(BaseModel):
     created_at: datetime
 
 
-class FavoriteBase(BaseModel):
-    """Общие поля, определяющие сущность избранного (документ или медиафайл)."""
+class FavoriteCreate(BaseModel):
+    """Данные для добавления записи в избранное."""
     entity_type: str  # document | media
     entity_id: int
 
 
-class FavoriteCreate(FavoriteBase):
-    """Данные для добавления записи в избранное."""
-    pass
-
-
-class FavoriteOut(FavoriteBase):
+class FavoriteOut(BaseModel):
     """Запись избранного в ответе API."""
     model_config = ConfigDict(from_attributes=True)
-    id: int
-    added_at: datetime | None
-
-
-class FavoriteListItem(FavoriteBase):
-    """Запись избранного в списке — дополнительно содержит название сущности."""
-    title: str
-    added_at: datetime | None
+    id: int | None = None
+    entity_type: str
+    entity_id: int
+    title: str | None = None
+    added_at: datetime | None = None
 
 
 class SearchResultItem(BaseModel):
