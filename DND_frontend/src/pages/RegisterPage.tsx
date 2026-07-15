@@ -21,8 +21,9 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [passwordRepeat, setPasswordRepeat] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const normalizedNickname = nickname.trim();
@@ -38,8 +39,8 @@ export default function RegisterPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Пароль должен быть не короче 6 символов.');
+    if (password.length < 8) {
+      setError('Пароль должен быть не короче 8 символов.');
       return;
     }
 
@@ -48,8 +49,15 @@ export default function RegisterPage() {
       return;
     }
 
-    register({ nickname: normalizedNickname, email: normalizedEmail, password });
-    navigate('/rooms', { replace: true });
+    try {
+      setIsSubmitting(true);
+      await register({ nickname: normalizedNickname, email: normalizedEmail, password });
+      navigate('/rooms', { replace: true });
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Не удалось выполнить регистрацию.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -110,7 +118,7 @@ export default function RegisterPage() {
               required
             />
 
-            <Button type="submit" variant="contained" size="large">
+            <Button type="submit" variant="contained" size="large" disabled={isSubmitting}>
               Создать аккаунт
             </Button>
 

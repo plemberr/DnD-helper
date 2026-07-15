@@ -1,4 +1,5 @@
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { Box, CircularProgress, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import type { ReactElement } from 'react';
 import {
   BrowserRouter,
   Navigate,
@@ -8,12 +9,14 @@ import {
 } from 'react-router-dom';
 
 import { AuthProvider } from './context/AuthContext';
+import { useAuth } from './context/AuthContext';
 import { AdminPage } from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
 import PlayerRoomPage from './pages/PlayerRoomPage';
 import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
 import { RoomPage } from './pages/RoomPage';
+import RoomsPage from './pages/RoomsPage';
 import { fantasyTheme } from './theme/fantasyTheme';
 
 const appTheme = createTheme({
@@ -49,6 +52,49 @@ function RoomRoute() {
   );
 }
 
+function AuthLoadingScreen() {
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'grid',
+        placeItems: 'center',
+        bgcolor: 'background.default',
+      }}
+    >
+      <CircularProgress />
+    </Box>
+  );
+}
+
+function ProtectedRoute({ children }: { children: ReactElement }) {
+  const { currentUser, isAuthLoading } = useAuth();
+
+  if (isAuthLoading) {
+    return <AuthLoadingScreen />;
+  }
+
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
+function GuestOnlyRoute({ children }: { children: ReactElement }) {
+  const { currentUser, isAuthLoading } = useAuth();
+
+  if (isAuthLoading) {
+    return <AuthLoadingScreen />;
+  }
+
+  if (currentUser) {
+    return <Navigate to="/rooms" replace />;
+  }
+
+  return children;
+}
+
 function App() {
   return (
     <ThemeProvider theme={appTheme}>
@@ -59,14 +105,63 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/rooms" replace />} />
 
-            <Route path="/rooms" element={<RoomsPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
+            <Route
+              path="/rooms"
+              element={
+                <ProtectedRoute>
+                  <RoomsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/login"
+              element={
+                <GuestOnlyRoute>
+                  <LoginPage />
+                </GuestOnlyRoute>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <GuestOnlyRoute>
+                  <RegisterPage />
+                </GuestOnlyRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
 
-            <Route path="/admin" element={<AdminRoute />} />
-            <Route path="/room" element={<RoomRoute />} />
-            <Route path="/room/:roomId" element={<PlayerRoomPage />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminRoute />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/room"
+              element={
+                <ProtectedRoute>
+                  <RoomRoute />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/room/:roomId"
+              element={
+                <ProtectedRoute>
+                  <PlayerRoomPage />
+                </ProtectedRoute>
+              }
+            />
 
             <Route path="*" element={<Navigate to="/rooms" replace />} />
           </Routes>
