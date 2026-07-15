@@ -13,6 +13,7 @@ from common.db import Base
 import services_models.auth_service
 import services_models.room_service
 import services_models.content_service
+import services_models.character_service
 
 config = context.config
 

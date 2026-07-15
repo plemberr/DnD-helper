@@ -3,6 +3,8 @@ from sqlalchemy import Integer, Column, ForeignKey
 from sqlalchemy import CheckConstraint
 
 class CharacterSkills(Base):
+    """Модель владения навыком персонажа"""
+
     __tablename__ = "character_skills"
     id = Column(Integer, primary_key=True)
     character_id = Column(Integer, ForeignKey('characters.id'), nullable=False)

@@ -1,11 +1,14 @@
 from common.db import Base
-from sqlalchemy import Integer, String, DateTime, Column, func, Text
+from sqlalchemy import Integer, String, DateTime, Column, func, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
 
 class Character(Base):
+    """Модель листа персонажа"""
+
     __tablename__ = "characters"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False)
+    room_id = Column(Integer, nullable=False)
     name = Column(String(80), nullable=False)
     race = Column(String(60), nullable=False)
     character_class = Column(String(60), nullable=False)
