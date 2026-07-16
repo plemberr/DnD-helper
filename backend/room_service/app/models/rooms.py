@@ -1,8 +1,12 @@
 from common.db import Base
 from sqlalchemy import Integer, String, DateTime, func, Column, Text
 
+
 class Rooms(Base):
+    """Модель игровой комнаты."""
+
     __tablename__ = 'rooms'
+
     id = Column(Integer, primary_key=True)
     title = Column(String(120), nullable=False)
     description = Column(Text, nullable=True)

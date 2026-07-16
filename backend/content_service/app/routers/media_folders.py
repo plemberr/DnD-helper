@@ -11,12 +11,12 @@ router = APIRouter(tags=["media-folders"])
 
 @router.post(
     "/rooms/{room_id}/media-folders",
-    response_model=schemas.MediaFolderOut,
+    response_model=schemas.FolderOut,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_media_folder(
     room_id: int,
-    payload: schemas.MediaFolderCreate,
+    payload: schemas.FolderCreate,
     user_id: int = Depends(require_room_master),
     db: AsyncSession = Depends(get_db),
 ):
@@ -33,7 +33,7 @@ async def create_media_folder(
 
 @router.get(
     "/rooms/{room_id}/media-folders",
-    response_model=list[schemas.MediaFolderOut],
+    response_model=list[schemas.FolderOut],
 )
 async def list_media_folders(
     room_id: int,
@@ -52,12 +52,12 @@ async def list_media_folders(
 
 @router.patch(
     "/rooms/{room_id}/media-folders/{folder_id}",
-    response_model=schemas.MediaFolderOut,
+    response_model=schemas.FolderOut,
 )
 async def update_media_folder(
     room_id: int,
     folder_id: int,
-    payload: schemas.MediaFolderUpdate,
+    payload: schemas.FolderUpdate,
     user_id: int = Depends(require_room_master),
     db: AsyncSession = Depends(get_db),
 ):

@@ -4,13 +4,17 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from room_service.app import security
+from room_service.app.config import PUBLIC_KEY, settings
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
-# декодирование токена
 def _decode_access_token(token: str) -> int:
+    """
+    Декодирует access-токен и достаёт из него id пользователя.
+    :param token: сырой JWT-токен
+    :return: id пользователя
+    """
     unauthorized = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Не авторизован",
@@ -18,9 +22,9 @@ def _decode_access_token(token: str) -> int:
     )
 
     try:
-        payload = security.decode_token(token)
+        payload = jwt.decode(token, PUBLIC_KEY, algorithms=[settings.jwt_algorithm])
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Access token истек")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Access token истек")
     except jwt.InvalidTokenError:
         raise unauthorized
 
@@ -34,19 +38,32 @@ def _decode_access_token(token: str) -> int:
     return int(user_id)
 
 
-# обязательная авторизация
-async def get_current_user_id( credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme)) -> int:
+async def get_current_user_id(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
+) -> int:
+    """
+    FastAPI-зависимость: требует валидный Bearer access-токен и возвращает id пользователя.
+    :param credentials: заголовок Authorization, извлекается автоматически через HTTPBearer
+    :return: id текущего пользователя
+    """
     if credentials is None:
         raise HTTPException(
-            status_code=401,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Не авторизован",
             headers={"WWW-Authenticate": "Bearer"},
         )
     return _decode_access_token(credentials.credentials)
 
 
-# необязательная авторизация
-async def get_optional_user_id(credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme)) -> Optional[int]:
+async def get_optional_user_id(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
+) -> Optional[int]:
+    """
+    FastAPI-зависимость: как get_current_user_id, но не требует авторизации.
+    Используется на ручках, доступных и анонимным пользователям.
+    :param credentials: заголовок Authorization, извлекается автоматически через HTTPBearer
+    :return: id текущего пользователя или None, если токен не передан либо невалиден
+    """
     if credentials is None:
         return None
     try:
@@ -55,11 +72,16 @@ async def get_optional_user_id(credentials: Optional[HTTPAuthorizationCredential
         return None
 
 
-# access токен, для отправки в auth, чтобы получить username
 async def get_bearer_token(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)) -> str:
+    """
+    FastAPI-зависимость: возвращает сырой access-токен из заголовка Authorization.
+    Нужен для проксирования запросов в auth_service (например, чтобы получить username).
+    :param credentials: заголовок Authorization, извлекается автоматически через HTTPBearer
+    :return: сырой access-токен
+    """
     if credentials is None:
         raise HTTPException(
-            status_code=401,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Не авторизован",
             headers={"WWW-Authenticate": "Bearer"},
         )
