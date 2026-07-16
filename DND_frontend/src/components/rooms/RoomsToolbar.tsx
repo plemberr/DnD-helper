@@ -11,15 +11,18 @@ import {
   InputAdornment,
   Menu,
   MenuItem,
+  Paper,
   Stack,
   Switch,
   TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { fantasyColors, fantasyFrameSx, fantasyGradients } from '../../theme/fantasyTheme';
 import { UserAvatar } from '../user/UserAvatar';
 
 export interface RoomFilters {
@@ -65,33 +68,49 @@ export function RoomsToolbar({
   };
 
   return (
-    <Box
+    <Paper
+      component="section"
+      aria-label="Поиск и фильтры комнат"
+      elevation={0}
       sx={{
-        bgcolor: 'background.paper',
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: 3,
-        px: { xs: 2, md: 2.5 },
-        py: 1.5,
-        boxShadow: 1,
+        ...fantasyFrameSx,
+        minWidth: 0,
+        px: { xs: 1.5, sm: 2, md: 2.5 },
+        py: { xs: 1.5, md: 1.75 },
+        background: fantasyGradients.panelRaised,
       }}
     >
       <Stack
-        direction={{ xs: 'column', md: 'row' }}
+        direction={{ xs: 'column', lg: 'row' }}
         spacing={1.5}
-        sx={{ alignItems: { xs: 'stretch', md: 'center' }, justifyContent: 'space-between' }}
+        sx={{ minWidth: 0, alignItems: { xs: 'stretch', lg: 'center' }, justifyContent: 'space-between' }}
       >
         {currentUser ? (
-          <Box>
+          <Box sx={{ flexShrink: 0 }}>
             <Button
               color="inherit"
               onClick={(event) => setUserAnchor(event.currentTarget)}
-              sx={{ justifyContent: 'flex-start', px: 1, color: 'text.primary', textAlign: 'left' }}
+              aria-haspopup="menu"
+              aria-expanded={Boolean(userAnchor)}
+              sx={{
+                justifyContent: 'flex-start',
+                minWidth: 190,
+                px: 1.25,
+                py: 0.65,
+                color: 'text.primary',
+                textAlign: 'left',
+                border: `1px solid ${alpha(fantasyColors.gold, 0.12)}`,
+                backgroundColor: alpha(fantasyColors.void, 0.2),
+                '&:hover': {
+                  borderColor: alpha(fantasyColors.gold, 0.32),
+                  backgroundColor: alpha(fantasyColors.gold, 0.05),
+                },
+              }}
             >
               <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
                 <UserAvatar nickname={currentUser.nickname} avatarUrl={currentUser.avatarUrl} size={40} />
-                <Box>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
+                <Box minWidth={0}>
+                  <Typography variant="subtitle1" noWrap sx={{ fontFamily: 'Georgia, serif', fontWeight: 700, lineHeight: 1.1 }}>
                     {currentUser.nickname}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
@@ -103,41 +122,46 @@ export function RoomsToolbar({
 
             <Menu anchorEl={userAnchor} open={Boolean(userAnchor)} onClose={() => setUserAnchor(null)}>
               <MenuItem onClick={openProfile}>
-                <PersonOutlineRoundedIcon fontSize="small" sx={{ mr: 1 }} />
+                <PersonOutlineRoundedIcon fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />
                 Личный кабинет
               </MenuItem>
               <MenuItem onClick={handleLogout}>
-                <LogoutRoundedIcon fontSize="small" sx={{ mr: 1 }} />
+                <LogoutRoundedIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
                 Выйти
               </MenuItem>
             </Menu>
           </Box>
         ) : (
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <Button variant="outlined" onClick={() => navigate('/login')}>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexShrink: 0, flexWrap: 'wrap' }}>
+            <Button variant="text" color="inherit" onClick={() => navigate('/login')}>
               Войти
             </Button>
-            <Button variant="contained" onClick={() => navigate('/register')}>
+            <Button variant="outlined" onClick={() => navigate('/register')}>
               Регистрация
             </Button>
           </Stack>
         )}
 
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} sx={{ width: { xs: '100%', md: 'auto' } }}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1.25}
+          sx={{ width: '100%', minWidth: 0, flex: 1, justifyContent: { lg: 'center' } }}
+        >
           <TextField
             value={searchValue}
             onChange={(event) => onSearchChange(event.target.value)}
             size="small"
             placeholder="Название комнаты"
-            sx={{ width: { xs: '100%', sm: 260 } }}
+            sx={{ width: { xs: '100%', sm: 290 }, maxWidth: '100%' }}
             slotProps={{
               input: {
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchRoundedIcon color="action" />
+                    <SearchRoundedIcon fontSize="small" sx={{ color: 'primary.main' }} />
                   </InputAdornment>
                 ),
               },
+              htmlInput: { 'aria-label': 'Поиск комнат по названию' },
             }}
           />
 
@@ -149,13 +173,15 @@ export function RoomsToolbar({
               </Badge>
             }
             onClick={(event) => setFilterAnchor(event.currentTarget)}
-            sx={{ whiteSpace: 'nowrap' }}
+            aria-haspopup="menu"
+            aria-expanded={Boolean(filterAnchor)}
+            sx={{ whiteSpace: 'nowrap', color: activeFiltersCount > 0 ? 'primary.light' : undefined }}
           >
             Фильтры
           </Button>
 
           <Menu anchorEl={filterAnchor} open={Boolean(filterAnchor)} onClose={() => setFilterAnchor(null)}>
-            <MenuItem disableRipple>
+            <MenuItem disableRipple sx={{ minWidth: 260 }}>
               <FormControlLabel
                 control={<Switch checked={filters.mine} onChange={() => changeFilter('mine')} />}
                 label="Мои комнаты"
@@ -177,11 +203,16 @@ export function RoomsToolbar({
         </Stack>
 
         <Tooltip title="Создать новую D&D-комнату">
-          <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={onCreateClick} sx={{ whiteSpace: 'nowrap' }}>
+          <Button
+            variant="contained"
+            startIcon={<AddRoundedIcon />}
+            onClick={onCreateClick}
+            sx={{ flexShrink: 0, whiteSpace: 'nowrap', width: { xs: '100%', sm: 'auto' } }}
+          >
             Создать комнату
           </Button>
         </Tooltip>
       </Stack>
-    </Box>
+    </Paper>
   );
 }

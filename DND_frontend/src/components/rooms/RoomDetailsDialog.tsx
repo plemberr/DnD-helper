@@ -11,6 +11,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { fantasyFrameSx } from '../../theme/fantasyTheme';
 import type { Room } from '../../types/room';
 
 interface RoomDetailsDialogProps {
@@ -20,7 +21,13 @@ interface RoomDetailsDialogProps {
 
 export function RoomDetailsDialog({ room, onClose }: RoomDetailsDialogProps) {
   return (
-    <Dialog open={Boolean(room)} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog
+      open={Boolean(room)}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      slotProps={{ paper: { elevation: 0, sx: fantasyFrameSx } }}
+    >
       {room && (
         <>
           <Box component="img" src={room.coverUrl} alt={`Обложка комнаты ${room.title}`} sx={{ width: '100%', height: 220, objectFit: 'cover' }} />

@@ -1,5 +1,11 @@
 import { useRef, useState, type ChangeEvent } from 'react';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
+import PortraitOutlinedIcon from '@mui/icons-material/PortraitOutlined';
 import { Alert, Box, Button, Paper, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import { fantasyColors, fantasyFrameSx, fantasyGradients } from '../../theme/fantasyTheme';
+import { FantasySectionHeading } from '../fantasy/FantasySectionHeading';
 import { UserAvatar } from '../user/UserAvatar';
 
 const allowedAvatarTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -46,19 +52,48 @@ export function ProfileAvatarCard({ nickname, avatarUrl, onAvatarChange }: Profi
   };
 
   return (
-    <Paper sx={{ p: { xs: 3, sm: 4 }, border: '1px solid', borderColor: 'divider' }}>
-      <Stack spacing={2.5} sx={{ alignItems: 'center', textAlign: 'center' }}>
-        <Box>
-          <Typography variant="h6">Аватар</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            JPG, PNG или WEBP до 1 МБ.
-          </Typography>
-        </Box>
+    <Paper
+      elevation={0}
+      sx={{
+        ...fantasyFrameSx,
+        p: { xs: 2.5, sm: 3.25 },
+        background: fantasyGradients.panelRaised,
+      }}
+    >
+      <Stack spacing={2.5}>
+        <FantasySectionHeading
+          icon={<PortraitOutlinedIcon />}
+          eyebrow="Образ героя"
+          title="Аватар"
+          description="JPG, PNG или WEBP до 1 МБ."
+        />
 
-        <UserAvatar nickname={nickname} avatarUrl={avatarUrl} size={132} fontSize={42} />
+        <Box sx={{ height: 1, background: fantasyGradients.ornament, opacity: 0.65 }} />
+
+        <Stack spacing={1.25} sx={{ alignItems: 'center', textAlign: 'center' }}>
+          <Box
+            sx={{
+              p: 1.25,
+              border: `1px solid ${alpha(fantasyColors.gold, 0.2)}`,
+              borderRadius: '50%',
+              background: `radial-gradient(circle, ${alpha(fantasyColors.gold, 0.08)}, transparent 68%)`,
+              boxShadow: `0 0 34px ${alpha(fantasyColors.burgundy, 0.24)}`,
+            }}
+          >
+            <UserAvatar nickname={nickname} avatarUrl={avatarUrl} size={132} fontSize={42} />
+          </Box>
+          <Box>
+            <Typography variant="h6" sx={{ lineHeight: 1.2 }}>
+              {nickname || 'Игрок'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Портрет участника кампании
+            </Typography>
+          </Box>
+        </Stack>
 
         {avatarError && (
-          <Alert severity="error" sx={{ width: '100%' }}>
+          <Alert severity="error" variant="outlined" sx={{ width: '100%' }}>
             {avatarError}
           </Alert>
         )}
@@ -72,16 +107,23 @@ export function ProfileAvatarCard({ nickname, avatarUrl, onAvatarChange }: Profi
         />
 
         <Stack direction={{ xs: 'column', sm: 'row', md: 'column' }} spacing={1.25} sx={{ width: '100%' }}>
-          <Button variant="contained" onClick={() => fileInputRef.current?.click()}>
+          <Button
+            variant="contained"
+            startIcon={<FileUploadOutlinedIcon />}
+            onClick={() => fileInputRef.current?.click()}
+            fullWidth
+          >
             Загрузить аватар
           </Button>
           <Button
             variant="outlined"
             color="inherit"
+            startIcon={<DeleteOutlineRoundedIcon />}
             onClick={() => {
               onAvatarChange(null);
               setAvatarError('');
             }}
+            fullWidth
           >
             Удалить аватар
           </Button>
