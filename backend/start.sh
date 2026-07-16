@@ -23,6 +23,12 @@ uvicorn content_service.app.main:app \
     --host 0.0.0.0 \
     --port "${CONTENT_SERVICE_PORT:-8003}" &
 
+echo "starting character-service"
+
+uvicorn character_service.app.main:app \
+    --host 0.0.0.0 \
+    --port "${CHARACTER_SERVICE_PORT:-8004}" &
+
 echo "starting knowledge-service"
 
 uvicorn knowledge_service.app.main:app \
