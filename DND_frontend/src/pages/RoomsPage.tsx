@@ -1,20 +1,22 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AddHomeWorkRoundedIcon from '@mui/icons-material/AddHomeWorkRounded';
 import {
   Alert,
   Box,
+  CircularProgress,
   Container,
   Snackbar,
   Stack,
   Typography,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { roomsService, type RoomListItemDto } from '../api/roomsService';
 import { CreateRoomDialog } from '../components/rooms/CreateRoomDialog';
 import { RoomCard } from '../components/rooms/RoomCard';
 import { RoomDetailsDialog } from '../components/rooms/RoomDetailsDialog';
 import { RoomsToolbar, type RoomFilters } from '../components/rooms/RoomsToolbar';
-import { mockRooms } from '../data/mockRooms';
+import { useAuth } from '../context/AuthContext';
 import type { CreateRoomData, Room } from '../types/room';
-import { useNavigate } from 'react-router-dom';
 
 const initialFilters: RoomFilters = {
   mine: false,
@@ -22,14 +24,132 @@ const initialFilters: RoomFilters = {
   available: false,
 };
 
+const AUTH_SESSION_STORAGE_KEY = 'dnd-helper-session';
+const DEFAULT_COVER_URL =
+  'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=900&q=80';
+
+interface StoredSession {
+  accessToken: string;
+}
+
+function readAccessToken(): string | null {
+  try {
+    const rawSession = localStorage.getItem(AUTH_SESSION_STORAGE_KEY);
+    if (!rawSession) {
+      return null;
+    }
+
+    const parsed = JSON.parse(rawSession) as StoredSession;
+    if (typeof parsed.accessToken === 'string' && parsed.accessToken.trim()) {
+      return parsed.accessToken;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function formatCreatedAt(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date);
+}
+
+function mapRoom(
+  item: RoomListItemDto,
+  currentUserNickname: string | undefined,
+  myRoomIds: Set<number>,
+  pendingRoomIds: Set<number>,
+): Room {
+  const isMine = myRoomIds.has(item.id);
+  const isOwner = isMine && currentUserNickname && item.master_name === currentUserNickname;
+
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description ?? 'Описание комнаты пока не добавлено.',
+    masterName: item.master_name || 'Не указан',
+    playersCount: item.current_players,
+    playersLimit: item.player_limit,
+    createdAt: formatCreatedAt(item.created_at),
+    coverUrl: item.cover_image_url ?? DEFAULT_COVER_URL,
+    membership: pendingRoomIds.has(item.id)
+      ? 'pending'
+      : isOwner
+        ? 'owner'
+        : isMine
+          ? 'member'
+          : item.is_full
+            ? 'full'
+            : 'available',
+  };
+}
+
 export default function RoomsPage() {
-  const [rooms, setRooms] = useState<Room[]>(mockRooms);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [searchValue, setSearchValue] = useState('');
   const [filters, setFilters] = useState<RoomFilters>(initialFilters);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [detailsRoom, setDetailsRoom] = useState<Room | null>(null);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<{ text: string; severity: 'success' | 'error' } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [pendingRoomIds, setPendingRoomIds] = useState<Set<number>>(new Set());
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
+
+  const loadRooms = async () => {
+    const accessToken = readAccessToken();
+
+    setIsLoading(true);
+    setLoadError('');
+
+    try {
+      const [allRoomsResponse, myRoomsResponse] = await Promise.all([
+        roomsService.list({ limit: 100, offset: 0, accessToken }),
+        accessToken ? roomsService.list({ my: true, limit: 100, offset: 0, accessToken }) : Promise.resolve(null),
+      ]);
+
+      const myIds = new Set((myRoomsResponse?.items ?? []).map((item) => item.id));
+      const mappedRooms = allRoomsResponse.items.map((item) =>
+        mapRoom(item, currentUser?.nickname, myIds, pendingRoomIds),
+      );
+      setRooms(mappedRooms);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Не удалось загрузить комнаты.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadRooms();
+  }, [currentUser?.nickname]);
+
+  useEffect(() => {
+    if (rooms.length === 0) {
+      return;
+    }
+
+    setRooms((currentRooms) =>
+      currentRooms.map((room) =>
+        pendingRoomIds.has(room.id)
+          ? { ...room, membership: 'pending' }
+          : room.membership === 'pending'
+            ? { ...room, membership: room.playersCount >= room.playersLimit ? 'full' : 'available' }
+            : room,
+      ),
+    );
+  }, [pendingRoomIds]);
 
   const filteredRooms = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase();
@@ -46,12 +166,24 @@ export default function RoomsPage() {
 
   const handlePrimaryAction = (room: Room) => {
     if (room.membership === 'available') {
-      setRooms((currentRooms) =>
-        currentRooms.map((currentRoom) =>
-          currentRoom.id === room.id ? { ...currentRoom, membership: 'pending' } : currentRoom,
-        ),
-      );
-      setMessage(`Заявка в комнату «${room.title}» отправлена.`);
+      const accessToken = readAccessToken();
+      if (!accessToken) {
+        setMessage({ text: 'Сессия не найдена. Войдите снова.', severity: 'error' });
+        return;
+      }
+
+      void roomsService
+        .join(room.id, accessToken)
+        .then(() => {
+          setPendingRoomIds((currentIds) => new Set(currentIds).add(room.id));
+          setMessage({ text: `Заявка в комнату «${room.title}» отправлена.`, severity: 'success' });
+        })
+        .catch((error) => {
+          setMessage({
+            text: error instanceof Error ? error.message : 'Не удалось отправить заявку.',
+            severity: 'error',
+          });
+        });
       return;
     }
 
@@ -62,26 +194,35 @@ export default function RoomsPage() {
     }
 
     if (room.membership === 'member') {
-      navigate('/room');
+      navigate(`/room/${room.id}`);
     }
   };
 
-  const handleCreateRoom = (data: CreateRoomData) => {
-    const newRoom: Room = {
-      id: Date.now(),
-      title: data.title,
-      description: data.description || 'Описание комнаты пока не добавлено.',
-      masterName: 'Админ',
-      playersCount: 1,
-      playersLimit: data.playersLimit,
-      createdAt: 'Только что',
-      coverUrl:
-        'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=900&q=80',
-      membership: 'owner',
-    };
+  const handleCreateRoom = async (data: CreateRoomData) => {
+    const accessToken = readAccessToken();
+    if (!accessToken) {
+      setMessage({ text: 'Сессия не найдена. Войдите снова.', severity: 'error' });
+      return;
+    }
 
-    setRooms((currentRooms) => [newRoom, ...currentRooms]);
-    setMessage(`Комната «${newRoom.title}» создана.`);
+    try {
+      await roomsService.create(
+        {
+          title: data.title,
+          description: data.description,
+          player_limit: data.playersLimit,
+        },
+        accessToken,
+      );
+
+      setMessage({ text: `Комната «${data.title}» создана.`, severity: 'success' });
+      await loadRooms();
+    } catch (error) {
+      setMessage({
+        text: error instanceof Error ? error.message : 'Не удалось создать комнату.',
+        severity: 'error',
+      });
+    }
   };
 
   return (
@@ -108,7 +249,15 @@ export default function RoomsPage() {
                 <Typography color="text.secondary">Найдено: {filteredRooms.length}</Typography>
               </Stack>
 
-              {filteredRooms.length > 0 ? (
+              {isLoading ? (
+                <Box sx={{ mt: 3, display: 'grid', placeItems: 'center', py: 8 }}>
+                  <CircularProgress />
+                </Box>
+              ) : loadError ? (
+                <Alert severity="error" sx={{ mt: 2.5 }}>
+                  {loadError}
+                </Alert>
+              ) : filteredRooms.length > 0 ? (
                 <Box
                   sx={{
                     mt: 2.5,
@@ -148,9 +297,9 @@ export default function RoomsPage() {
 
       <CreateRoomDialog open={isCreateOpen} onClose={() => setIsCreateOpen(false)} onCreate={handleCreateRoom} />
       <RoomDetailsDialog room={detailsRoom} onClose={() => setDetailsRoom(null)} />
-      <Snackbar open={Boolean(message)} autoHideDuration={3500} onClose={() => setMessage('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-        <Alert severity="success" variant="filled" onClose={() => setMessage('')}>
-          {message}
+      <Snackbar open={Boolean(message)} autoHideDuration={3500} onClose={() => setMessage(null)} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity={message?.severity ?? 'success'} variant="filled" onClose={() => setMessage(null)}>
+          {message?.text ?? ''}
         </Alert>
       </Snackbar>
     </>
