@@ -13,25 +13,33 @@ import {
   Typography,
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+
 import { AuthPageLayout } from '../components/auth/AuthPageLayout';
 import { useAuth } from '../context/AuthContext';
 
 export default function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
+
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordRepeat, setPasswordRepeat] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const normalizedNickname = nickname.trim();
     const normalizedEmail = email.trim().toLowerCase();
 
-    if (!normalizedNickname || !normalizedEmail || !password || !passwordRepeat) {
+    if (
+      !normalizedNickname ||
+      !normalizedEmail ||
+      !password ||
+      !passwordRepeat
+    ) {
       setError('Заполните все поля.');
       return;
     }
@@ -41,8 +49,8 @@ export default function RegisterPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Пароль должен быть не короче 6 символов.');
+    if (password.length < 8) {
+      setError('Пароль должен быть не короче 8 символов.');
       return;
     }
 
@@ -51,8 +59,26 @@ export default function RegisterPage() {
       return;
     }
 
-    register({ nickname: normalizedNickname, email: normalizedEmail, password });
-    navigate('/rooms', { replace: true });
+    try {
+      setIsSubmitting(true);
+      setError('');
+
+      await register({
+        nickname: normalizedNickname,
+        email: normalizedEmail,
+        password,
+      });
+
+      navigate('/rooms', { replace: true });
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : 'Не удалось выполнить регистрацию.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -97,6 +123,7 @@ export default function RegisterPage() {
           fullWidth
           required
         />
+
         <TextField
           label="Email"
           type="email"
@@ -118,6 +145,7 @@ export default function RegisterPage() {
           fullWidth
           required
         />
+
         <TextField
           label="Пароль"
           type="password"
@@ -139,6 +167,7 @@ export default function RegisterPage() {
           fullWidth
           required
         />
+
         <TextField
           label="Повторите пароль"
           type="password"
@@ -167,8 +196,9 @@ export default function RegisterPage() {
           size="large"
           fullWidth
           endIcon={<PersonAddAltRoundedIcon />}
+          disabled={isSubmitting}
         >
-          Создать аккаунт
+          {isSubmitting ? 'Создаём аккаунт…' : 'Создать аккаунт'}
         </Button>
       </Stack>
     </AuthPageLayout>

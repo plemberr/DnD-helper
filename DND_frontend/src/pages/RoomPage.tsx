@@ -10,6 +10,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { fantasyPageBackground, fantasyTokens, ornateCornersSx } from '../theme/fantasyTheme';
 
 type RoomPageProps = {
   onOpenAdmin: () => void;
@@ -25,7 +26,7 @@ export function RoomPage({ onOpenAdmin, onOpenRoom }: RoomPageProps) {
         width: '100%',
         flexDirection: 'column',
         overflowX: 'hidden',
-        bgcolor: 'grey.100',
+        background: fantasyPageBackground,
         color: 'text.primary',
       }}
     >
@@ -78,14 +79,14 @@ export function RoomPage({ onOpenAdmin, onOpenRoom }: RoomPageProps) {
                   Экран для показа текста, картинок, музыки и звука участникам
                 </Typography>
 
-                <Paper variant="outlined" sx={{ mt: 5, p: 2, textAlign: 'left' }}>
+                <Paper variant="outlined" sx={{ ...ornateCornersSx, mt: 5, p: 2, textAlign: 'left' }}>
                   <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pb: 1, borderBottom: 1, borderColor: 'divider' }}>
                     <Typography variant="subtitle2">Центральная область</Typography>
-                    <Typography variant="body2" color="warning.main">
+                    <Typography variant="body2" color="warning.light">
                       live
                     </Typography>
                   </Stack>
-                  <Box sx={{ mt: 1.5, minHeight: 320, borderRadius: 2, border: 1, borderStyle: 'dashed', borderColor: 'divider', bgcolor: '#faf8f4' }} />
+                  <Box sx={{ mt: 1.5, minHeight: 320, borderRadius: 2, border: 1, borderStyle: 'dashed', borderColor: 'divider', bgcolor: fantasyTokens.bgDeepest }} />
                   <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
                     Здесь позже появится расшаренный контент со стороны админки.
                   </Typography>

@@ -13,6 +13,8 @@ import { Api } from '../../api/Api';
 import { mediaLibraries, type MediaItem, type MediaType } from '../../data/library';
 import { useMediaLibraryStore } from '../../store/mediaLibraryStore';
 
+const MEDIA_LIBRARY_DND_MIME = 'application/x-tenzor-media-library-item';
+
 type MediaDragState = {
   mediaType: MediaType;
   itemId: string;
@@ -87,6 +89,24 @@ export function MediaLibraryPanel() {
     mediaDragRef.current = null;
   };
 
+  const setExternalMediaPayload = (event: React.DragEvent<HTMLElement>, mediaType: MediaType, item: MediaItem) => {
+    if (item.kind === 'folder') {
+      return;
+    }
+
+    event.dataTransfer.effectAllowed = 'copyMove';
+    event.dataTransfer.setData(
+      MEDIA_LIBRARY_DND_MIME,
+      JSON.stringify({
+        mediaType,
+        itemId: item.id,
+        itemName: item.name,
+        itemKind: item.kind,
+      }),
+    );
+    event.dataTransfer.setData('text/plain', item.name);
+  };
+
   const acceptByMediaType: Record<MediaType, string> = {
     picture: 'image/*',
     sound: 'audio/*',
@@ -99,7 +119,7 @@ export function MediaLibraryPanel() {
         <Typography variant="subtitle1" sx={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>
           Библиотека медиа файлов
         </Typography>
-        <IconButton size="small" onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}>
+        <IconButton size="small" onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')} sx={{ display: 'none' }}>
           {viewMode === 'list' ? <ViewListOutlinedIcon fontSize="small" /> : <GridViewOutlinedIcon fontSize="small" />}
         </IconButton>
       </Stack>
@@ -148,8 +168,9 @@ export function MediaLibraryPanel() {
                         key={item.id}
                         draggable
                         onClick={() => selectMediaItem(mediaType, item)}
-                        onDragStart={() => {
+                        onDragStart={(event) => {
                           mediaDragRef.current = { mediaType, itemId: item.id };
+                          setExternalMediaPayload(event, mediaType, item);
                         }}
                         onDragEnd={() => {
                           mediaDragRef.current = null;
@@ -194,8 +215,9 @@ export function MediaLibraryPanel() {
                         key={item.id}
                         draggable
                         onClick={() => selectMediaItem(mediaType, item)}
-                        onDragStart={() => {
+                        onDragStart={(event) => {
                           mediaDragRef.current = { mediaType, itemId: item.id };
+                          setExternalMediaPayload(event, mediaType, item);
                         }}
                         onDragEnd={() => {
                           mediaDragRef.current = null;

@@ -1,30 +1,27 @@
-from functools import lru_cache
 from pathlib import Path
 
 from common.config import CommonSettings
 
 
 class Settings(CommonSettings):
+    """Конфигурация room-сервиса."""
 
-    # БД из общего config
-
-    # JWT
     jwt_algorithm: str = "RS256"
     jwt_public_key_path: str = "keys/public.pem"
 
-    auth_service_url: str = "http://localhost:8001"
     auth_service_timeout_seconds: float = 5.0
 
+    @property
+    def auth_service_url(self) -> str:
+        return f"http://localhost:{self.auth_service_port}"
 
-@lru_cache
-def get_settings() -> Settings:
-    return Settings()
 
-
-settings = get_settings()
+settings = Settings()
 
 
 def _read_key(path: str) -> str:
+    """Считывает публичный JWT-ключ из файла."""
+
     key_path = Path(path)
     if not key_path.is_file():
         raise FileNotFoundError(
