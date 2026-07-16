@@ -6,13 +6,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from room_service.app.models import RoomMember, Rooms, Role, JoinRequests
 
 
-# комната по id
 async def get_room_by_id(db: AsyncSession, room_id: int) -> Optional[Rooms]:
+    """
+    Возвращает комнату по её id.
+    :param db: сессия БД
+    :param room_id: id комнаты
+    :return: найденная комната или None, если не существует
+    """
     result = await db.execute(select(Rooms).where(Rooms.id == room_id))
     return result.scalar_one_or_none()
 
 
-# создание комнаты
 async def create_room(
     db: AsyncSession,
     title: str,
@@ -21,6 +25,16 @@ async def create_room(
     cover_image_url: Optional[str],
     master_id: int,
 ) -> Rooms:
+    """
+    Создаёт новую комнату.
+    :param db: сессия БД
+    :param title: название комнаты
+    :param description: описание комнаты
+    :param player_limit: максимальное количество игроков
+    :param cover_image_url: ссылка на обложку комнаты
+    :param master_id: id пользователя-мастера
+    :return: созданная комната
+    """
     room = Rooms(
         title=title,
         description=description,
@@ -34,7 +48,6 @@ async def create_room(
     return room
 
 
-# изменение комнаты
 async def update_room(
     db: AsyncSession,
     room: Rooms,
@@ -43,6 +56,16 @@ async def update_room(
     player_limit: Optional[int],
     cover_image_url: Optional[str],
 ) -> Rooms:
+    """
+    Обновляет комнату, обновляются только переданные поля.
+    :param db: сессия БД
+    :param room: обновляемая комната
+    :param title: новое название (если None, то не изменяется)
+    :param description: новое описание (если None, то не изменяется)
+    :param player_limit: новый лимит игроков (если None, то не изменяется)
+    :param cover_image_url: новая ссылка на обложку (если None, то не изменяется)
+    :return: обновлённая комната
+    """
     if title is not None:
         room.title = title
     if description is not None:
@@ -57,8 +80,13 @@ async def update_room(
     return room
 
 
-# удаление комнаты
 async def delete_room(db: AsyncSession, room: Rooms) -> None:
+    """
+    Удаляет комнату вместе со всеми её участниками и заявками на вступление.
+    :param db: сессия БД
+    :param room: удаляемая комната
+    :return: ничего
+    """
     await db.execute(
         delete(RoomMember).where(RoomMember.room_id == room.id)
     )
@@ -71,15 +99,19 @@ async def delete_room(db: AsyncSession, room: Rooms) -> None:
     await db.commit()
 
 
-# кол-во членов комнаты
 async def count_members(db: AsyncSession, room_id: int) -> int:
+    """
+    Возвращает количество участников комнаты.
+    :param db: сессия БД
+    :param room_id: id комнаты
+    :return: количество участников
+    """
     result = await db.execute(
         select(func.count(RoomMember.id)).where(RoomMember.room_id == room_id)
     )
     return result.scalar_one()
 
 
-# лист комнат с пагинацией
 async def list_rooms(
     db: AsyncSession,
     limit: Optional[int],
@@ -89,6 +121,17 @@ async def list_rooms(
     mine_only: bool = False,
     open_only: bool = False,
 ) -> Tuple[Sequence[Tuple[Rooms, int, str]], int]:
+    """
+    Возвращает список комнат с пагинацией вместе с числом игроков и именем мастера в каждой.
+    :param db: сессия БД
+    :param limit: максимальное количество комнат в ответе (если None, то без ограничения)
+    :param offset: смещение для пагинации
+    :param sort: сортировка ("players", "alphabet" или по умолчанию по дате создания)
+    :param my_user_id: id текущего пользователя, используется вместе с mine_only
+    :param mine_only: если True, возвращаются только комнаты, где my_user_id является мастером
+    :param open_only: если True, возвращаются только комнаты со свободными местами
+    :return: кортеж (список строк (комната, число игроков, имя мастера), общее количество комнат)
+    """
 
     member_count_subq = (
         select(

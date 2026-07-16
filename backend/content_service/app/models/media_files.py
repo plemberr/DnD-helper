@@ -5,11 +5,15 @@ from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import ARRAY
 
 class Type(StrEnum):
+    """Типы медиафайлов, поддерживаемые системой."""
+
     image = 'image'
     audio = 'audio'
     sound = 'sound'
 
 class MediaFile(Base):
+    """Модель медиафайла, загруженного в систему."""
+
     __tablename__ = 'media_files'
     id = Column(Integer, primary_key=True)
     room_id = Column(Integer, nullable=False)

@@ -45,7 +45,7 @@ async def add_favorite(
     )
 
 
-@router.get("/rooms/{room_id}/favorites", response_model=list[schemas.FavoriteListItem])
+@router.get("/rooms/{room_id}/favorites", response_model=list[schemas.FavoriteOut])
 async def list_favorites(
     room_id: int,
     entity_type: str | None = None,
@@ -63,20 +63,20 @@ async def list_favorites(
     et = EntityType(entity_type) if entity_type else None
     favorites = await favorites_repository.list_by_user(db, user_id, et)
 
-    items: list[schemas.FavoriteListItem] = []
+    items: list[schemas.FavoriteOut] = []
     for fav in favorites:
         if fav.entity_type == EntityType.document:
             doc = await documents_repository.get_by_id(db, fav.entity_id)
             if doc is None or doc.room_id != room_id:
                 continue
-            items.append(schemas.FavoriteListItem(
+            items.append(schemas.FavoriteOut(
                 entity_type=fav.entity_type, entity_id=fav.entity_id, title=doc.title, added_at=fav.created_at,
             ))
         else:
             media = await media_files_repository.get_by_id(db, fav.entity_id)
             if media is None or media.room_id != room_id:
                 continue
-            items.append(schemas.FavoriteListItem(
+            items.append(schemas.FavoriteOut(
                 entity_type=fav.entity_type, entity_id=fav.entity_id, title=media.original_name, added_at=fav.created_at,
             ))
 

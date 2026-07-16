@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+import { fantasyPageBackground } from '../theme/fantasyTheme';
 import { AppHeader } from '../components/AppHeader';
 import { DocumentTreeSidebar } from '../components/admin/DocumentTreeSidebar';
 import { DocumentWorkspace } from '../components/admin/DocumentWorkspace';
@@ -25,7 +26,7 @@ type TabState = {
   documentId: string;
 };
 
-type DragKind = 'folder' | 'document';
+type DragKind = 'folder' | 'document' | MediaType;
 
 type DragState =
   | {
@@ -62,6 +63,10 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
   ]);
   const [activeTabId, setActiveTabId] = useState('tab-1');
   const [selectedMediaType, setSelectedMediaType] = useState<MediaType>('music');
+  const [isCreateFolderDialogOpen, setIsCreateFolderDialogOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [createDocumentFolderId, setCreateDocumentFolderId] = useState<string | null>(null);
+  const [newDocumentName, setNewDocumentName] = useState('');
   const dragStateRef = useRef<DragState>(null);
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
@@ -86,11 +91,12 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
     }));
   };
 
-  const createDocumentInFolder = (folderId: string) => {
+  const createDocumentInFolder = (folderId: string, documentName: string) => {
     const documentId = `doc-${Date.now()}`;
+    const trimmedName = documentName.trim();
     const nextDocument: TextFileNode = {
       id: documentId,
-      name: `Текст док ${documentId.slice(-4)}`,
+      name: trimmedName || `Текст док ${documentId.slice(-4)}`,
       kind: 'document',
       summary: 'Новый текстовый документ',
       content: 'Новый текстовый документ',
@@ -98,20 +104,60 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
     };
 
     setDocumentRoots((current) => nodeHelper.insertNodeIntoFolder(current, folderId, nextDocument));
+    setExpandedFolders((current) => ({ ...current, [folderId]: true }));
     updateActiveTabDocument(documentId);
   };
 
-  const createFolder = () => {
+  const requestCreateDocumentInFolder = (folderId: string) => {
+    setCreateDocumentFolderId(folderId);
+    setNewDocumentName('');
+  };
+
+  const closeCreateDocumentDialog = () => {
+    setCreateDocumentFolderId(null);
+    setNewDocumentName('');
+  };
+
+  const submitCreateDocument = () => {
+    if (!createDocumentFolderId || !newDocumentName.trim()) {
+      return;
+    }
+
+    createDocumentInFolder(createDocumentFolderId, newDocumentName);
+    closeCreateDocumentDialog();
+  };
+
+  const createFolder = (folderName: string) => {
     const folderId = `folder-${Date.now()}`;
+    const trimmedName = folderName.trim();
     const nextFolder: FolderNode = {
       id: folderId,
-      name: `Новая папка ${folderId.slice(-4)}`,
+      name: trimmedName || `Новая папка ${folderId.slice(-4)}`,
       kind: 'folder',
       children: [],
     };
 
     setDocumentRoots((current) => [...current, nextFolder]);
     setExpandedFolders((current) => ({ ...current, [folderId]: true }));
+  };
+
+  const requestCreateFolder = () => {
+    setIsCreateFolderDialogOpen(true);
+    setNewFolderName('');
+  };
+
+  const closeCreateFolderDialog = () => {
+    setIsCreateFolderDialogOpen(false);
+    setNewFolderName('');
+  };
+
+  const submitCreateFolder = () => {
+    if (!newFolderName.trim()) {
+      return;
+    }
+
+    createFolder(newFolderName);
+    closeCreateFolderDialog();
   };
 
   const deleteNode = (nodeId: string) => {
@@ -163,15 +209,11 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
 
   const closeTab = (tabId: string) => {
     setTabs((current) => {
-      if (current.length === 1) {
-        return current;
-      }
-
       const currentIndex = current.findIndex((tab) => tab.id === tabId);
       const nextTabs = current.filter((tab) => tab.id !== tabId);
-      const fallbackTab = nextTabs[currentIndex] ?? nextTabs[currentIndex - 1] ?? nextTabs[0];
+      const fallbackTab = nextTabs[currentIndex] ?? nextTabs[currentIndex - 1] ?? nextTabs[0] ?? null;
 
-      setActiveTabId((activeCurrent) => (activeCurrent === tabId ? fallbackTab.id : activeCurrent));
+      setActiveTabId((activeCurrent) => (activeCurrent === tabId ? fallbackTab?.id ?? '' : activeCurrent));
 
       return nextTabs;
     });
@@ -179,13 +221,17 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
 
   const handleRootDrop = (rootId: string, insertIndex: number) => {
     const currentDrag = dragStateRef.current;
-    if (currentDrag?.kind === 'document') {
+    if (currentDrag) {
       moveNodeToFolder(currentDrag.id, rootId, insertIndex);
       updateDragState(null);
     }
   };
 
   const getTabDocument = (documentId: string): TextFileNode => nodeHelper.findTextFileById(documentRoots, documentId) ?? activeDocument;
+  const createDocumentFolderName =
+    createDocumentFolderId && nodeHelper.findNodeById(documentRoots, createDocumentFolderId)?.kind === 'folder'
+      ? nodeHelper.findNodeById(documentRoots, createDocumentFolderId)?.name
+      : 'папке';
 
   const dropMediaIntoFolder = (payload: SidebarMediaDropPayload, folderId: string) => {
     const mediaNode: MediaFileNode = {
@@ -231,7 +277,7 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
   };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', width: '100%', flexDirection: 'column', overflowX: 'hidden', bgcolor: 'grey.100', color: 'text.primary' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', width: '100%', flexDirection: 'column', overflowX: 'hidden', background: fantasyPageBackground, color: 'text.primary' }}>
       <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
         <AppHeader isRoomScreen={false} onOpenAdmin={onOpenAdmin} onOpenRoom={onOpenRoom} />
 
@@ -241,9 +287,9 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
             expandedFolders={expandedFolders}
             activeDocumentId={activeDocument.id}
             selectedMediaType={selectedMediaType}
-            onCreateFolder={createFolder}
+            onCreateFolder={requestCreateFolder}
             onToggleFolder={toggleFolder}
-            onCreateDocumentInFolder={createDocumentInFolder}
+            onCreateDocumentInFolder={requestCreateDocumentInFolder}
             onDeleteNode={deleteNode}
             onSelectDocument={updateActiveTabDocument}
             onSelectMediaType={setSelectedMediaType}
@@ -271,6 +317,60 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
 
         <MusicLibraryFooter />
       </Box>
+      <Dialog open={Boolean(createDocumentFolderId)} onClose={closeCreateDocumentDialog} fullWidth maxWidth="xs">
+        <DialogTitle>Новый текстовый документ в {createDocumentFolderName}</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Название документа"
+            value={newDocumentName}
+            onChange={(event) => setNewDocumentName(event.target.value)}
+            margin="dense"
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                submitCreateDocument();
+              }
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeCreateDocumentDialog} color="inherit">
+            Отмена
+          </Button>
+          <Button onClick={submitCreateDocument} variant="contained" disabled={!newDocumentName.trim()}>
+            Создать
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={isCreateFolderDialogOpen} onClose={closeCreateFolderDialog} fullWidth maxWidth="xs">
+        <DialogTitle>Новая папка</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Название папки"
+            value={newFolderName}
+            onChange={(event) => setNewFolderName(event.target.value)}
+            margin="dense"
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                submitCreateFolder();
+              }
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeCreateFolderDialog} color="inherit">
+            Отмена
+          </Button>
+          <Button onClick={submitCreateFolder} variant="contained" disabled={!newFolderName.trim()}>
+            Создать
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

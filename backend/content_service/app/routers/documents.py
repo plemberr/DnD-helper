@@ -40,7 +40,8 @@ async def create_document(
 
 @router.get(
     "/document-folders/{folder_id}/documents",
-    response_model=list[schemas.DocumentListItem],
+    response_model=list[schemas.DocumentOut],
+    response_model_exclude={"content"},
 )
 async def list_documents_in_folder(
     folder_id: int,
@@ -52,7 +53,7 @@ async def list_documents_in_folder(
     :param folder_id: id папки документов
     :param user_id: id текущего пользователя (подставляется из токена)
     :param db: сессия БД
-    :return: список документов (list[DocumentListItem])
+    :return: список документов без содержимого (list[DocumentOut], без content)
     """
     folder = await folders_repository.get_by_id(db, folder_id)
     if folder is None:

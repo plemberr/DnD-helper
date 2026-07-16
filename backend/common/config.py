@@ -10,3 +10,4 @@ class CommonSettings(BaseSettings):
     room_service_port: int = 8002
     content_service_port: int = 8003
     character_service_port: int = 8004
+    knowledge_service_port: int = 8005

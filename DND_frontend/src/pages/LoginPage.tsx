@@ -19,8 +19,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const normalizedEmail = email.trim().toLowerCase();
@@ -34,8 +35,15 @@ export default function LoginPage() {
       return;
     }
 
-    login({ email: normalizedEmail, password });
-    navigate('/rooms', { replace: true });
+    try {
+      setIsSubmitting(true);
+      await login({ email: normalizedEmail, password });
+      navigate('/rooms', { replace: true });
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Не удалось выполнить вход.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -75,7 +83,7 @@ export default function LoginPage() {
               required
             />
 
-            <Button type="submit" variant="contained" size="large">
+            <Button type="submit" variant="contained" size="large" disabled={isSubmitting}>
               Войти
             </Button>
 

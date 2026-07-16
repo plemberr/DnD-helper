@@ -2,6 +2,8 @@ from common.db import Base
 from sqlalchemy import Integer, DateTime, func, Column, ForeignKey, String, Text, Boolean
 
 class Document(Base):
+    """Модель документа, хранящегося в комнате."""
+
     __tablename__ = 'documents'
     id = Column(Integer, primary_key=True)
     room_id = Column(Integer, nullable=False)

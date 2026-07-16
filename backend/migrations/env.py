@@ -14,6 +14,7 @@ import services_models.auth_service
 import services_models.room_service
 import services_models.content_service
 import services_models.character_service
+import services_models.knowledge_service
 
 config = context.config
 

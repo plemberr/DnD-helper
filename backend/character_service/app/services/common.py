@@ -9,7 +9,6 @@ from character_service.app.repositories import character_repository
 
 # проверки доступа
 
-
 async def require_room(room_id: int) -> None:
     """
     Проверяет, что комната существует
@@ -68,9 +67,7 @@ async def require_master(room_id: int, user_id: int) -> None:
     if not await room_client.is_room_master(room_id, user_id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Недостаточно прав")
 
-
 # сериализация JSON-полей
-
 
 def serialize_items(items: list) -> List[schemas.Item]:
     """Преобразует список JSON-объектов инвентаря/черт в схемы Item"""

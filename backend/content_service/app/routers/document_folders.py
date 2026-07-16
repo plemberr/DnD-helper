@@ -12,12 +12,12 @@ router = APIRouter(tags=["document-folders"])
 
 @router.post(
     "/rooms/{room_id}/document-folders",
-    response_model=schemas.DocumentFolderOut,  # автоматическое преобразование Folder в схему
+    response_model=schemas.FolderOut,  # автоматическое преобразование Folder в схему
     status_code=status.HTTP_201_CREATED,
 )
 async def create_folder(
     room_id: int,
-    payload: schemas.DocumentFolderCreate,
+    payload: schemas.FolderCreate,
     user_id: int = Depends(require_room_master),
     db: AsyncSession = Depends(get_db),
 ):
@@ -42,7 +42,7 @@ async def create_folder(
 
 @router.get(
     "/rooms/{room_id}/document-folders",
-    response_model=list[schemas.DocumentFolderOut],
+    response_model=list[schemas.FolderOut],
 )
 async def list_folders(
     room_id: int,
@@ -64,12 +64,12 @@ async def list_folders(
 
 @router.patch(
     "/rooms/{room_id}/document-folders/{folder_id}",
-    response_model=schemas.DocumentFolderOut,
+    response_model=schemas.FolderOut,
 )
 async def update_folder(
     room_id: int,
     folder_id: int,
-    payload: schemas.DocumentFolderUpdate,
+    payload: schemas.FolderUpdate,
     user_id: int = Depends(require_room_master),
     db: AsyncSession = Depends(get_db),
 ):
