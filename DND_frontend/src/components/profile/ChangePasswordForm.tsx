@@ -1,5 +1,10 @@
 import { useState, type FormEvent } from 'react';
-import { Alert, Box, Button, Paper, Stack, TextField, Typography } from '@mui/material';
+import KeyRoundedIcon from '@mui/icons-material/KeyRounded';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
+import { Alert, Box, Button, InputAdornment, Paper, Stack, TextField } from '@mui/material';
+import { fantasyFrameSx, fantasyGradients } from '../../theme/fantasyTheme';
+import { FantasySectionHeading } from '../fantasy/FantasySectionHeading';
 
 export function ChangePasswordForm() {
   const [securityError, setSecurityError] = useState('');
@@ -38,18 +43,29 @@ export function ChangePasswordForm() {
     <Paper
       component="form"
       onSubmit={changePassword}
-      sx={{ p: { xs: 3, sm: 4 }, border: '1px solid', borderColor: 'divider' }}
+      elevation={0}
+      sx={{ ...fantasyFrameSx, p: { xs: 2.5, sm: 3.5 } }}
     >
       <Stack spacing={2.25}>
-        <Box>
-          <Typography variant="h6">Безопасность</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            В демо-версии пароль не сохраняется в браузере.
-          </Typography>
-        </Box>
+        <FantasySectionHeading
+          icon={<ShieldOutlinedIcon />}
+          eyebrow="Защитные руны"
+          title="Безопасность"
+          description="В демо-версии пароль не сохраняется в браузере."
+        />
 
-        {securityError && <Alert severity="error">{securityError}</Alert>}
-        {securityMessage && <Alert severity="info">{securityMessage}</Alert>}
+        <Box sx={{ height: 1, background: fantasyGradients.ornament, opacity: 0.65 }} />
+
+        {securityError && (
+          <Alert severity="error" variant="outlined">
+            {securityError}
+          </Alert>
+        )}
+        {securityMessage && (
+          <Alert severity="info" variant="outlined">
+            {securityMessage}
+          </Alert>
+        )}
 
         <TextField
           label="Текущий пароль"
@@ -60,32 +76,72 @@ export function ChangePasswordForm() {
             setSecurityError('');
             setSecurityMessage('');
           }}
-          fullWidth
-        />
-        <TextField
-          label="Новый пароль"
-          type="password"
-          value={newPassword}
-          onChange={(event) => {
-            setNewPassword(event.target.value);
-            setSecurityError('');
-            setSecurityMessage('');
+          autoComplete="current-password"
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockOutlinedIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            },
           }}
           fullWidth
         />
-        <TextField
-          label="Повторите новый пароль"
-          type="password"
-          value={newPasswordRepeat}
-          onChange={(event) => {
-            setNewPasswordRepeat(event.target.value);
-            setSecurityError('');
-            setSecurityMessage('');
+
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+            gap: 2,
           }}
-          fullWidth
-        />
+        >
+          <TextField
+            label="Новый пароль"
+            type="password"
+            value={newPassword}
+            onChange={(event) => {
+              setNewPassword(event.target.value);
+              setSecurityError('');
+              setSecurityMessage('');
+            }}
+            autoComplete="new-password"
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockOutlinedIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+            fullWidth
+          />
+          <TextField
+            label="Повторите новый пароль"
+            type="password"
+            value={newPasswordRepeat}
+            onChange={(event) => {
+              setNewPasswordRepeat(event.target.value);
+              setSecurityError('');
+              setSecurityMessage('');
+            }}
+            autoComplete="new-password"
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockOutlinedIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+            fullWidth
+          />
+        </Box>
+
         <Box>
-          <Button type="submit" variant="outlined">
+          <Button type="submit" variant="outlined" startIcon={<KeyRoundedIcon />}>
             Сменить пароль
           </Button>
         </Box>

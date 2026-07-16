@@ -1,21 +1,26 @@
 import { useState, type FormEvent } from 'react';
+import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import PersonAddAltRoundedIcon from '@mui/icons-material/PersonAddAltRounded';
+import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded';
 import {
   Alert,
-  Box,
   Button,
-  Container,
+  InputAdornment,
   Link,
-  Paper,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+
+import { AuthPageLayout } from '../components/auth/AuthPageLayout';
 import { useAuth } from '../context/AuthContext';
 
 export default function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
+
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,7 +34,12 @@ export default function RegisterPage() {
     const normalizedNickname = nickname.trim();
     const normalizedEmail = email.trim().toLowerCase();
 
-    if (!normalizedNickname || !normalizedEmail || !password || !passwordRepeat) {
+    if (
+      !normalizedNickname ||
+      !normalizedEmail ||
+      !password ||
+      !passwordRepeat
+    ) {
       setError('Заполните все поля.');
       return;
     }
@@ -51,86 +61,146 @@ export default function RegisterPage() {
 
     try {
       setIsSubmitting(true);
-      await register({ nickname: normalizedNickname, email: normalizedEmail, password });
+      setError('');
+
+      await register({
+        nickname: normalizedNickname,
+        email: normalizedEmail,
+        password,
+      });
+
       navigate('/rooms', { replace: true });
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Не удалось выполнить регистрацию.');
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : 'Не удалось выполнить регистрацию.',
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: { xs: 3, md: 7 } }}>
-      <Container maxWidth="sm">
-        <Paper component="form" onSubmit={submit} sx={{ p: { xs: 3, sm: 4 }, border: '1px solid', borderColor: 'divider' }}>
-          <Stack spacing={2.5}>
-            <Box>
-              <Typography variant="h4">Регистрация</Typography>
-              <Typography color="text.secondary" sx={{ mt: 0.75 }}>
-                Создайте демо-аккаунт для D&D-комнат.
-              </Typography>
-            </Box>
+    <AuthPageLayout
+      eyebrow="Новая запись в летописи"
+      title="Регистрация"
+      description="Создайте профиль искателя приключений, чтобы вступать в кампании и открывать собственные комнаты."
+      onSubmit={submit}
+      footer={
+        <Typography variant="body2" color="text.secondary">
+          Уже есть аккаунт?{' '}
+          <Link component={RouterLink} to="/login">
+            Войти
+          </Link>
+        </Typography>
+      }
+    >
+      <Stack spacing={2}>
+        {error && (
+          <Alert severity="error" variant="outlined">
+            {error}
+          </Alert>
+        )}
 
-            {error && <Alert severity="error">{error}</Alert>}
+        <TextField
+          label="Никнейм"
+          value={nickname}
+          onChange={(event) => {
+            setNickname(event.target.value);
+            setError('');
+          }}
+          autoComplete="nickname"
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PersonOutlineRoundedIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            },
+          }}
+          fullWidth
+          required
+        />
 
-            <TextField
-              label="Никнейм"
-              value={nickname}
-              onChange={(event) => {
-                setNickname(event.target.value);
-                setError('');
-              }}
-              fullWidth
-              required
-            />
-            <TextField
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(event) => {
-                setEmail(event.target.value);
-                setError('');
-              }}
-              fullWidth
-              required
-            />
-            <TextField
-              label="Пароль"
-              type="password"
-              value={password}
-              onChange={(event) => {
-                setPassword(event.target.value);
-                setError('');
-              }}
-              fullWidth
-              required
-            />
-            <TextField
-              label="Повторите пароль"
-              type="password"
-              value={passwordRepeat}
-              onChange={(event) => {
-                setPasswordRepeat(event.target.value);
-                setError('');
-              }}
-              fullWidth
-              required
-            />
+        <TextField
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            setError('');
+          }}
+          autoComplete="email"
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailOutlinedIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            },
+          }}
+          fullWidth
+          required
+        />
 
-            <Button type="submit" variant="contained" size="large" disabled={isSubmitting}>
-              Создать аккаунт
-            </Button>
+        <TextField
+          label="Пароль"
+          type="password"
+          value={password}
+          onChange={(event) => {
+            setPassword(event.target.value);
+            setError('');
+          }}
+          autoComplete="new-password"
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockOutlinedIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            },
+          }}
+          fullWidth
+          required
+        />
 
-            <Typography color="text.secondary">
-              Уже есть аккаунт?{' '}
-              <Link component={RouterLink} to="/login">
-                Войти
-              </Link>
-            </Typography>
-          </Stack>
-        </Paper>
-      </Container>
-    </Box>
+        <TextField
+          label="Повторите пароль"
+          type="password"
+          value={passwordRepeat}
+          onChange={(event) => {
+            setPasswordRepeat(event.target.value);
+            setError('');
+          }}
+          autoComplete="new-password"
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockOutlinedIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            },
+          }}
+          fullWidth
+          required
+        />
+
+        <Button
+          type="submit"
+          variant="contained"
+          size="large"
+          fullWidth
+          endIcon={<PersonAddAltRoundedIcon />}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Создаём аккаунт…' : 'Создать аккаунт'}
+        </Button>
+      </Stack>
+    </AuthPageLayout>
   );
 }

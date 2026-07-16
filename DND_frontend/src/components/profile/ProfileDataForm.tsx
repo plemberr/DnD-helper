@@ -1,5 +1,11 @@
 import { useState, type FormEvent } from 'react';
-import { Alert, Box, Button, Paper, Stack, TextField, Typography } from '@mui/material';
+import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
+import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
+import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
+import { Alert, Box, Button, InputAdornment, Paper, Stack, TextField } from '@mui/material';
+import { fantasyFrameSx, fantasyGradients } from '../../theme/fantasyTheme';
+import { FantasySectionHeading } from '../fantasy/FantasySectionHeading';
 
 interface ProfileDataFormProps {
   nickname: string;
@@ -42,41 +48,77 @@ export function ProfileDataForm({
     <Paper
       component="form"
       onSubmit={saveProfile}
-      sx={{ p: { xs: 3, sm: 4 }, border: '1px solid', borderColor: 'divider' }}
+      elevation={0}
+      sx={{ ...fantasyFrameSx, p: { xs: 2.5, sm: 3.5 } }}
     >
       <Stack spacing={2.25}>
-        <Box>
-          <Typography variant="h6">Данные профиля</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Эти данные отображаются в верхней панели и карточках вашего профиля.
-          </Typography>
+        <FantasySectionHeading
+          icon={<ManageAccountsOutlinedIcon />}
+          eyebrow="Запись путешественника"
+          title="Данные профиля"
+          description="Эти данные отображаются в реестре комнат и карточках вашего профиля."
+        />
+
+        <Box sx={{ height: 1, background: fantasyGradients.ornament, opacity: 0.65 }} />
+
+        {profileError && (
+          <Alert severity="error" variant="outlined">
+            {profileError}
+          </Alert>
+        )}
+
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+            gap: 2,
+          }}
+        >
+          <TextField
+            label="Никнейм"
+            value={nickname}
+            onChange={(event) => {
+              onNicknameChange(event.target.value);
+              setProfileError('');
+            }}
+            autoComplete="nickname"
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PersonOutlineRoundedIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+            fullWidth
+            required
+          />
+          <TextField
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(event) => {
+              onEmailChange(event.target.value);
+              setProfileError('');
+            }}
+            autoComplete="email"
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EmailOutlinedIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+            fullWidth
+            required
+          />
         </Box>
 
-        {profileError && <Alert severity="error">{profileError}</Alert>}
-
-        <TextField
-          label="Никнейм"
-          value={nickname}
-          onChange={(event) => {
-            onNicknameChange(event.target.value);
-            setProfileError('');
-          }}
-          fullWidth
-          required
-        />
-        <TextField
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(event) => {
-            onEmailChange(event.target.value);
-            setProfileError('');
-          }}
-          fullWidth
-          required
-        />
         <Box>
-          <Button type="submit" variant="contained">
+          <Button type="submit" variant="contained" startIcon={<SaveOutlinedIcon />}>
             Сохранить изменения
           </Button>
         </Box>

@@ -8,6 +8,7 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
+import { fantasyFrameSx } from '../../theme/fantasyTheme';
 import type { CreateRoomData } from '../../types/room';
 
 interface CreateRoomDialogProps {
@@ -45,7 +46,13 @@ export function CreateRoomDialog({ open, onClose, onCreate }: CreateRoomDialogPr
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      slotProps={{ paper: { elevation: 0, sx: fantasyFrameSx } }}
+    >
       <DialogTitle>Создать комнату</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
