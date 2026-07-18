@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
 import { fantasyPageBackground } from '../theme/fantasyTheme';
 import { AppHeader } from '../components/AppHeader';
 import { DocumentTreeSidebar } from '../components/admin/DocumentTreeSidebar';
@@ -7,13 +7,16 @@ import { DocumentWorkspace } from '../components/admin/DocumentWorkspace';
 import { MediaLibraryPanel } from '../components/admin/MediaLibraryPanel';
 import { MusicLibraryFooter } from '../components/admin/MusicLibraryFooter';
 import {
-  documentTree as initialDocumentTree,
   type FolderNode,
   type MediaFileNode,
   type MediaType,
   type TextFileNode,
 } from '../data/library';
+import { contentService } from '../api/contentService';
+import { roomsService } from '../api/roomsService';
 import { nodeHelper } from '../utils/nodeHelper';
+import { readAccessToken } from '../utils/authSession';
+import { readActiveAdminRoomId } from '../utils/roomSession';
 
 type AdminPageProps = {
   onOpenAdmin: () => void;
@@ -53,28 +56,170 @@ const fallbackDocument: TextFileNode = {
 };
 
 export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
-  const [documentRoots, setDocumentRoots] = useState<FolderNode[]>(() => nodeHelper.cloneTree(initialDocumentTree));
-  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>(
-    Object.fromEntries(initialDocumentTree.map((node) => [node.id, true])),
-  );
-  const [tabs, setTabs] = useState<TabState[]>([
-    { id: 'tab-1', title: 'Вкладка 1', documentId: 'doc-1-text' },
-    { id: 'tab-2', title: 'Вкладка 2', documentId: 'doc-2-text' },
-  ]);
+  const [documentRoots, setDocumentRoots] = useState<FolderNode[]>([]);
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+  const [tabs, setTabs] = useState<TabState[]>([{ id: 'tab-1', title: 'Вкладка 1', documentId: fallbackDocument.id }]);
   const [activeTabId, setActiveTabId] = useState('tab-1');
   const [selectedMediaType, setSelectedMediaType] = useState<MediaType>('music');
   const [isCreateFolderDialogOpen, setIsCreateFolderDialogOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [createDocumentFolderId, setCreateDocumentFolderId] = useState<string | null>(null);
   const [newDocumentName, setNewDocumentName] = useState('');
+  const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
+  const [isAdminLoading, setIsAdminLoading] = useState(true);
+  const [adminError, setAdminError] = useState('');
   const dragStateRef = useRef<DragState>(null);
+  const saveContentTimersRef = useRef<Record<string, number>>({});
+  const accessToken = readAccessToken();
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
-  const activeDocument =
-    nodeHelper.findTextFileById(documentRoots, activeTab?.documentId ?? 'doc-1-text') ??
-    nodeHelper.findFirstTextDocument(documentRoots) ??
-    fallbackDocument;
+  const activeDocument = nodeHelper.findTextFileById(documentRoots, activeTab?.documentId ?? fallbackDocument.id) ?? nodeHelper.findFirstTextDocument(documentRoots) ?? fallbackDocument;
   const breadcrumbs = useMemo(() => ['Корень', 'Кампания', activeDocument.name], [activeDocument]);
+
+  const parseFolderNumericId = (nodeId: string): number | null => {
+    if (!nodeId.startsWith('folder-')) {
+      return null;
+    }
+    const parsed = Number(nodeId.replace('folder-', ''));
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const parseDocumentNumericId = (nodeId: string): number | null => {
+    if (!nodeId.startsWith('document-')) {
+      return null;
+    }
+    const parsed = Number(nodeId.replace('document-', ''));
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const syncTabsWithTree = (nextRoots: FolderNode[]) => {
+    const firstDocument = nodeHelper.findFirstTextDocument(nextRoots);
+    const fallbackDocumentId = firstDocument?.id ?? fallbackDocument.id;
+
+    setTabs((currentTabs) =>
+      currentTabs.map((tab) => {
+        const hasDocument = nodeHelper.findTextFileById(nextRoots, tab.documentId);
+        return hasDocument ? tab : { ...tab, documentId: fallbackDocumentId };
+      }),
+    );
+  };
+
+  const loadAdminData = async (roomId: number, token: string) => {
+    const tree = await contentService.getAdminDocumentTree(roomId, token);
+    setDocumentRoots(tree);
+    setExpandedFolders((current) => ({
+      ...Object.fromEntries(tree.map((node) => [node.id, true])),
+      ...current,
+    }));
+    syncTabsWithTree(tree);
+  };
+
+  const retryLoad = async () => {
+    if (!activeRoomId || !accessToken) {
+      return;
+    }
+
+    setIsAdminLoading(true);
+    try {
+      await loadAdminData(activeRoomId, accessToken);
+      setAdminError('');
+    } catch (error) {
+      setAdminError(error instanceof Error ? error.message : 'Не удалось загрузить данные админки.');
+    } finally {
+      setIsAdminLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const resolveActiveRoom = async () => {
+      if (!accessToken) {
+        if (isMounted) {
+          setAdminError('Сессия не найдена. Войдите снова, чтобы открыть админку.');
+          setIsAdminLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const storedRoomId = readActiveAdminRoomId();
+        if (storedRoomId) {
+          if (isMounted) {
+            setActiveRoomId(storedRoomId);
+          }
+          return;
+        }
+
+        const myRoomsResponse = await roomsService.list({
+          my: true,
+          limit: 1,
+          offset: 0,
+          accessToken,
+        });
+
+        if (!isMounted) {
+          return;
+        }
+
+        const fallbackRoomId = myRoomsResponse.items[0]?.id ?? null;
+        setActiveRoomId(fallbackRoomId);
+        if (!fallbackRoomId) {
+          setAdminError('Не найдена комната мастера. Создайте комнату на странице реестра.');
+          setIsAdminLoading(false);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setAdminError(error instanceof Error ? error.message : 'Не удалось определить комнату мастера.');
+          setIsAdminLoading(false);
+        }
+      }
+    };
+
+    void resolveActiveRoom();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [accessToken]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const load = async () => {
+      if (!activeRoomId || !accessToken) {
+        return;
+      }
+
+      setIsAdminLoading(true);
+      setAdminError('');
+      try {
+        await loadAdminData(activeRoomId, accessToken);
+      } catch (error) {
+        if (isMounted) {
+          setAdminError(error instanceof Error ? error.message : 'Не удалось загрузить данные админки.');
+        }
+      } finally {
+        if (isMounted) {
+          setIsAdminLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeRoomId, accessToken]);
+
+  useEffect(
+    () => () => {
+      Object.values(saveContentTimersRef.current).forEach((timerId) => clearTimeout(timerId));
+      saveContentTimersRef.current = {};
+    },
+    [],
+  );
 
   const updateDragState = (nextDragState: DragState) => {
     dragStateRef.current = nextDragState;
@@ -92,20 +237,22 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
   };
 
   const createDocumentInFolder = (folderId: string, documentName: string) => {
-    const documentId = `doc-${Date.now()}`;
     const trimmedName = documentName.trim();
-    const nextDocument: TextFileNode = {
-      id: documentId,
-      name: trimmedName || `Текст док ${documentId.slice(-4)}`,
-      kind: 'document',
-      summary: 'Новый текстовый документ',
-      content: 'Новый текстовый документ',
-      links: [],
-    };
+    const folderNumericId = parseFolderNumericId(folderId);
+    if (!activeRoomId || !accessToken || !folderNumericId) {
+      return;
+    }
 
-    setDocumentRoots((current) => nodeHelper.insertNodeIntoFolder(current, folderId, nextDocument));
-    setExpandedFolders((current) => ({ ...current, [folderId]: true }));
-    updateActiveTabDocument(documentId);
+    void contentService
+      .createDocument(folderNumericId, trimmedName || 'Новый текстовый документ', 'Новый текстовый документ', accessToken)
+      .then(async (createdDocument) => {
+        await loadAdminData(activeRoomId, accessToken);
+        updateActiveTabDocument(`document-${createdDocument.id}`);
+        setExpandedFolders((current) => ({ ...current, [folderId]: true }));
+      })
+      .catch((error) => {
+        setAdminError(error instanceof Error ? error.message : 'Не удалось создать документ.');
+      });
   };
 
   const requestCreateDocumentInFolder = (folderId: string) => {
@@ -128,17 +275,20 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
   };
 
   const createFolder = (folderName: string) => {
-    const folderId = `folder-${Date.now()}`;
     const trimmedName = folderName.trim();
-    const nextFolder: FolderNode = {
-      id: folderId,
-      name: trimmedName || `Новая папка ${folderId.slice(-4)}`,
-      kind: 'folder',
-      children: [],
-    };
+    if (!activeRoomId || !accessToken) {
+      return;
+    }
 
-    setDocumentRoots((current) => [...current, nextFolder]);
-    setExpandedFolders((current) => ({ ...current, [folderId]: true }));
+    void contentService
+      .createDocumentFolder(activeRoomId, trimmedName || 'Новая папка', accessToken, null)
+      .then(async (createdFolder) => {
+        await loadAdminData(activeRoomId, accessToken);
+        setExpandedFolders((current) => ({ ...current, [`folder-${createdFolder.id}`]: true }));
+      })
+      .catch((error) => {
+        setAdminError(error instanceof Error ? error.message : 'Не удалось создать папку.');
+      });
   };
 
   const requestCreateFolder = () => {
@@ -161,20 +311,36 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
   };
 
   const deleteNode = (nodeId: string) => {
-    const { tree: nextTree, removed } = nodeHelper.removeNodeById(documentRoots, nodeId);
-    if (!removed) {
+    if (!activeRoomId || !accessToken) {
       return;
     }
 
-    setDocumentRoots(nextTree);
-    setTabs((currentTabs) => {
-      if (!currentTabs.some((tab) => tab.documentId === nodeId)) {
-        return currentTabs;
-      }
+    const folderId = parseFolderNumericId(nodeId);
+    const documentId = parseDocumentNumericId(nodeId);
 
-      const fallback = nodeHelper.findFirstTextDocument(nextTree) ?? fallbackDocument;
-      return currentTabs.map((tab) => (tab.documentId === nodeId ? { ...tab, documentId: fallback.id } : tab));
-    });
+    const deleteRequest = folderId
+      ? contentService.deleteDocumentFolder(activeRoomId, folderId, accessToken)
+      : documentId
+        ? contentService.deleteDocument(documentId, accessToken)
+        : null;
+
+    if (!deleteRequest) {
+      const { tree: nextTree, removed } = nodeHelper.removeNodeById(documentRoots, nodeId);
+      if (!removed) {
+        return;
+      }
+      setDocumentRoots(nextTree);
+      syncTabsWithTree(nextTree);
+      return;
+    }
+
+    void deleteRequest
+      .then(async () => {
+        await loadAdminData(activeRoomId, accessToken);
+      })
+      .catch((error) => {
+        setAdminError(error instanceof Error ? error.message : 'Не удалось удалить элемент.');
+      });
   };
 
   const updateTextContent = (documentId: string, content: string) => {
@@ -191,6 +357,22 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
 
       return nodeHelper.replaceTextDocument(current, documentId, nextDocument);
     });
+
+    const numericDocumentId = parseDocumentNumericId(documentId);
+    if (!numericDocumentId || !accessToken) {
+      return;
+    }
+
+    const existingTimer = saveContentTimersRef.current[documentId];
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+
+    saveContentTimersRef.current[documentId] = window.setTimeout(() => {
+      void contentService.updateDocument(numericDocumentId, { content }, accessToken).catch((error) => {
+        setAdminError(error instanceof Error ? error.message : 'Не удалось сохранить документ.');
+      });
+    }, 700);
   };
 
   const openNewTab = () => {
@@ -246,6 +428,26 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
   };
 
   const moveNodeToFolder = (nodeId: string, folderId: string, insertIndex: number | null = null) => {
+    const sourceNode = nodeHelper.findNodeById(documentRoots, nodeId);
+    const sourceFolderId = parseFolderNumericId(nodeId);
+    const targetFolderId = parseFolderNumericId(folderId);
+
+    if (sourceNode?.kind === 'folder' && activeRoomId && accessToken && sourceFolderId && targetFolderId) {
+      if (sourceFolderId === targetFolderId || nodeHelper.containsNode(sourceNode, folderId)) {
+        return;
+      }
+
+      void contentService
+        .updateDocumentFolder(activeRoomId, sourceFolderId, { parent_folder_id: targetFolderId }, accessToken)
+        .then(async () => {
+          await loadAdminData(activeRoomId, accessToken);
+        })
+        .catch((error) => {
+          setAdminError(error instanceof Error ? error.message : 'Не удалось переместить папку.');
+        });
+      return;
+    }
+
     setDocumentRoots((current) => {
       const sourceNode = nodeHelper.findNodeById(current, nodeId);
       const targetFolder = nodeHelper.findNodeById(current, folderId);
@@ -299,20 +501,39 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
             onSetDragState={updateDragState}
             onRootDrop={handleRootDrop}
           />
+          {isAdminLoading ? (
+            <Box sx={{ display: 'grid', flex: 1, placeItems: 'center' }}>
+              <CircularProgress />
+            </Box>
+          ) : adminError ? (
+            <Box sx={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', p: 3 }}>
+              <Stack spacing={1.5} sx={{ width: '100%', maxWidth: 760 }}>
+                <Alert severity="error">{adminError}</Alert>
+                <Typography variant="body2" color="text.secondary">
+                  Откройте список комнат и снова перейдите в админку из комнаты, где вы мастер.
+                </Typography>
+                <Button variant="outlined" onClick={() => void retryLoad()}>
+                  Повторить
+                </Button>
+              </Stack>
+            </Box>
+          ) : (
+            <>
+              <DocumentWorkspace
+                tabs={tabs}
+                activeTabId={activeTabId}
+                activeDocument={activeDocument}
+                breadcrumbs={breadcrumbs}
+                getTabDocument={getTabDocument}
+                onSetActiveTabId={setActiveTabId}
+                onCloseTab={closeTab}
+                onOpenNewTab={openNewTab}
+                onUpdateTextContent={updateTextContent}
+              />
 
-          <DocumentWorkspace
-            tabs={tabs}
-            activeTabId={activeTabId}
-            activeDocument={activeDocument}
-            breadcrumbs={breadcrumbs}
-            getTabDocument={getTabDocument}
-            onSetActiveTabId={setActiveTabId}
-            onCloseTab={closeTab}
-            onOpenNewTab={openNewTab}
-            onUpdateTextContent={updateTextContent}
-          />
-
-          <MediaLibraryPanel />
+              <MediaLibraryPanel roomId={activeRoomId} />
+            </>
+          )}
         </Box>
 
         <MusicLibraryFooter />
