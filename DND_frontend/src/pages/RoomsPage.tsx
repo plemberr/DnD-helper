@@ -28,6 +28,8 @@ import {
   fantasyInsetSx,
 } from '../theme/fantasyTheme';
 import type { CreateRoomData, Room } from '../types/room';
+import { readAccessToken } from '../utils/authSession';
+import { saveActiveAdminRoomId } from '../utils/roomSession';
 
 const initialFilters: RoomFilters = {
   mine: false,
@@ -35,33 +37,8 @@ const initialFilters: RoomFilters = {
   available: false,
 };
 
-const AUTH_SESSION_STORAGE_KEY = 'dnd-helper-session';
 const DEFAULT_COVER_URL =
   'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=900&q=80';
-
-interface StoredSession {
-  accessToken: string;
-}
-
-function readAccessToken(): string | null {
-  try {
-    const rawSession = localStorage.getItem(AUTH_SESSION_STORAGE_KEY);
-
-    if (!rawSession) {
-      return null;
-    }
-
-    const parsed = JSON.parse(rawSession) as StoredSession;
-
-    if (typeof parsed.accessToken === 'string' && parsed.accessToken.trim()) {
-      return parsed.accessToken;
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
 
 function formatCreatedAt(value: string): string {
   const date = new Date(value);
@@ -270,6 +247,7 @@ export default function RoomsPage() {
     }
 
     if (room.membership === 'owner') {
+      saveActiveAdminRoomId(room.id);
       navigate('/admin');
       return;
     }

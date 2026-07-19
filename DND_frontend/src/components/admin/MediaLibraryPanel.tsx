@@ -9,9 +9,10 @@ import ViewListOutlinedIcon from '@mui/icons-material/ViewListOutlined';
 import { useEffect, useRef, useState } from 'react';
 import { Box, CircularProgress, IconButton, Paper, Stack, Typography } from '@mui/material';
 import { useMutation, useQuery } from '../../lib/reactZustandQuery';
-import { Api } from '../../api/Api';
+import { contentService } from '../../api/contentService';
 import { mediaLibraries, type MediaItem, type MediaType } from '../../data/library';
 import { useMediaLibraryStore } from '../../store/mediaLibraryStore';
+import { readAccessToken } from '../../utils/authSession';
 
 const MEDIA_LIBRARY_DND_MIME = 'application/x-tenzor-media-library-item';
 
@@ -20,9 +21,14 @@ type MediaDragState = {
   itemId: string;
 } | null;
 
-export function MediaLibraryPanel() {
+type MediaLibraryPanelProps = {
+  roomId: number | null;
+};
+
+export function MediaLibraryPanel({ roomId }: MediaLibraryPanelProps) {
   const orderedMediaTypes: MediaType[] = ['picture', 'sound', 'music'];
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [defaultFolderId, setDefaultFolderId] = useState<number | null>(null);
   const inputRefs = useRef<Record<MediaType, HTMLInputElement | null>>({
     picture: null,
     sound: null,
@@ -38,10 +44,20 @@ export function MediaLibraryPanel() {
   const moveMediaItem = useMediaLibraryStore((state) => state.moveMediaItem);
   const selectMediaItem = useMediaLibraryStore((state) => state.selectMediaItem);
   const setUploadingState = useMediaLibraryStore((state) => state.setUploadingState);
+  const accessToken = readAccessToken();
 
-  const mediaLibraryQuery = useQuery<Record<MediaType, MediaItem[]>>({
-    queryKey: ['media-library'],
-    queryFn: Api.getMediaLibrary,
+  const mediaLibraryQuery = useQuery<{ mediaState: Record<MediaType, MediaItem[]>; defaultFolderId: number }>({
+    queryKey: ['media-library', roomId, accessToken],
+    queryFn: async () => {
+      if (!roomId || !accessToken) {
+        return {
+          mediaState: contentService.createEmptyMediaState(),
+          defaultFolderId: 0,
+        };
+      }
+
+      return contentService.getAdminMediaLibrary(roomId, accessToken);
+    },
     staleTime: 30_000,
     retry: 1,
   });
@@ -51,7 +67,11 @@ export function MediaLibraryPanel() {
     { mediaType: MediaType; file: File }
   >({
     mutationFn: async ({ mediaType, file }) => {
-      const uploaded = await Api.uploadMediaFile(mediaType, file);
+      if (!roomId || !accessToken || !defaultFolderId) {
+        throw new Error('Не удалось определить активную комнату для загрузки медиа.');
+      }
+
+      const uploaded = await contentService.uploadMediaFile(roomId, defaultFolderId, mediaType, file, accessToken);
       return { mediaType, item: uploaded };
     },
     onSuccess: ({ mediaType, item }) => {
@@ -60,9 +80,27 @@ export function MediaLibraryPanel() {
     },
   });
 
+  const deleteMediaMutation = useMutation<void, { mediaType: MediaType; itemId: string }>({
+    mutationFn: async ({ mediaType, itemId }) => {
+      if (!accessToken) {
+        throw new Error('Сессия не найдена. Войдите снова.');
+      }
+
+      const mediaId = Number(itemId.replace('media-', ''));
+      if (!Number.isFinite(mediaId)) {
+        return;
+      }
+
+      await contentService.deleteMediaFile(mediaType, mediaId, accessToken);
+    },
+  });
+
   useEffect(() => {
     if (mediaLibraryQuery.data) {
-      setMediaState(mediaLibraryQuery.data);
+      setMediaState(mediaLibraryQuery.data.mediaState);
+      if (mediaLibraryQuery.data.defaultFolderId > 0) {
+        setDefaultFolderId(mediaLibraryQuery.data.defaultFolderId);
+      }
     }
   }, [mediaLibraryQuery.data, setMediaState]);
 
@@ -197,8 +235,9 @@ export function MediaLibraryPanel() {
                         </Typography>
                         <IconButton
                           size="small"
-                          onClick={(event) => {
+                          onClick={async (event) => {
                             event.stopPropagation();
+                            await deleteMediaMutation.mutate({ mediaType, itemId: item.id });
                             deleteMediaItem(mediaType, item.id);
                           }}
                           aria-label="Удалить"
@@ -244,8 +283,9 @@ export function MediaLibraryPanel() {
                         </Typography>
                         <IconButton
                           size="small"
-                          onClick={(event) => {
+                          onClick={async (event) => {
                             event.stopPropagation();
+                            await deleteMediaMutation.mutate({ mediaType, itemId: item.id });
                             deleteMediaItem(mediaType, item.id);
                           }}
                           aria-label="Удалить"
