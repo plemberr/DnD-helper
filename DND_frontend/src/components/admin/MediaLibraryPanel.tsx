@@ -13,6 +13,11 @@ import { contentService } from '../../api/contentService';
 import { mediaLibraries, type MediaItem, type MediaType } from '../../data/library';
 import { useMediaLibraryStore } from '../../store/mediaLibraryStore';
 import { readAccessToken } from '../../utils/authSession';
+import {
+  fantasyColors,
+  fantasyGradients,
+  fantasyShadows,
+} from '../../theme/fantasyTheme';
 
 const MEDIA_LIBRARY_DND_MIME = 'application/x-tenzor-media-library-item';
 
@@ -152,8 +157,34 @@ export function MediaLibraryPanel({ roomId }: MediaLibraryPanelProps) {
   };
 
   return (
-    <Box component="aside" sx={{ width: 340, flexShrink: 0, display: 'flex', flexDirection: 'column', borderLeft: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-      <Stack direction="row" alignItems="center" sx={{ px: 1.5, height: 48, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+    <Box
+      component="aside"
+      sx={{
+        width: 340,
+        flexShrink: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        borderLeft: 1,
+        borderColor: fantasyColors.border,
+        color: fantasyColors.text,
+        backgroundColor: fantasyColors.backdrop,
+        backgroundImage:
+          'radial-gradient(circle at 100% 0%, rgba(87, 37, 45, 0.18), transparent 34%), linear-gradient(180deg, #171215 0%, #100d11 100%)',
+      }}
+    >
+      <Stack
+        direction="row"
+        alignItems="center"
+        sx={{
+          px: 1.5,
+          height: 48,
+          borderBottom: 1,
+          borderColor: fantasyColors.border,
+          backgroundColor: fantasyColors.panelRaised,
+          backgroundImage: fantasyGradients.panelRaised,
+          boxShadow: 'inset 0 -1px 0 rgba(210, 173, 103, 0.08)',
+        }}
+      >
         <Typography variant="subtitle1" sx={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>
           Библиотека медиа файлов
         </Typography>
@@ -162,17 +193,64 @@ export function MediaLibraryPanel({ roomId }: MediaLibraryPanelProps) {
         </IconButton>
       </Stack>
 
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
+      <Box
+        sx={{
+          flex: 1,
+          overflow: 'auto',
+          '&::-webkit-scrollbar': { width: 8 },
+          '&::-webkit-scrollbar-track': {
+            backgroundColor: 'rgba(11, 9, 12, 0.34)',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'rgba(210, 173, 103, 0.24)',
+            borderRadius: 4,
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            backgroundColor: 'rgba(210, 173, 103, 0.38)',
+          },
+        }}
+      >
         <Stack spacing={1.5} sx={{ p: 1.5 }}>
           {orderedMediaTypes.map((mediaType) => {
             const library = mediaLibraries[mediaType];
             const items = mediaState[mediaType];
 
             return (
-              <Paper key={mediaType} variant="outlined" sx={{ p: 1.5 }}>
+              <Paper
+                key={mediaType}
+                variant="outlined"
+                sx={{
+                  p: 1.5,
+                  color: fantasyColors.text,
+                  borderColor: fantasyColors.border,
+                  backgroundColor:
+                    mediaType === 'picture'
+                      ? '#241a1d'
+                      : mediaType === 'sound'
+                        ? '#21191b'
+                        : '#1d1519',
+                  backgroundImage:
+                    mediaType === 'picture'
+                      ? 'linear-gradient(145deg, rgba(210, 173, 103, 0.055), transparent 38%)'
+                      : mediaType === 'sound'
+                        ? 'linear-gradient(145deg, rgba(125, 141, 162, 0.05), transparent 42%)'
+                        : 'linear-gradient(145deg, rgba(87, 37, 45, 0.14), transparent 46%)',
+                  boxShadow: fantasyShadows.panel,
+                  transition: 'border-color 160ms ease, box-shadow 160ms ease',
+                  '&:hover': {
+                    borderColor: fantasyColors.borderStrong,
+                    boxShadow: `${fantasyShadows.panel}, 0 0 18px rgba(210, 173, 103, 0.06)`,
+                  },
+                }}
+              >
                 <Stack direction="row" alignItems="center">
                   <Typography variant="subtitle2">{library.title}</Typography>
-                  <Stack direction="row" alignItems="center" spacing={0.25} sx={{ ml: 'auto', color: 'warning.dark' }}>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    spacing={0.25}
+                    sx={{ ml: 'auto', color: fantasyColors.gold }}
+                  >
                     {mediaType === 'music' && <MusicNoteIcon fontSize="small" />}
                     {mediaType === 'picture' && <ImageOutlinedIcon fontSize="small" />}
                     {mediaType === 'sound' && <GraphicEqOutlinedIcon fontSize="small" />}
@@ -223,10 +301,29 @@ export function MediaLibraryPanel({ roomId }: MediaLibraryPanelProps) {
                           py: 0.75,
                           borderRadius: 1,
                           border: 1,
-                          borderColor: selectedMediaPreview?.item.id === item.id ? 'warning.main' : 'divider',
-                          bgcolor: selectedMediaPreview?.item.id === item.id ? 'rgba(255, 167, 38, 0.12)' : 'grey.50',
+                          borderColor:
+                            selectedMediaPreview?.item.id === item.id
+                              ? fantasyColors.gold
+                              : fantasyColors.border,
+                          color: fantasyColors.text,
+                          backgroundColor:
+                            selectedMediaPreview?.item.id === item.id
+                              ? 'rgba(87, 37, 45, 0.62)'
+                              : 'rgba(11, 9, 12, 0.38)',
+                          boxShadow:
+                            selectedMediaPreview?.item.id === item.id
+                              ? 'inset 3px 0 0 #d2ad67, 0 0 14px rgba(210, 173, 103, 0.08)'
+                              : 'inset 0 1px 0 rgba(255, 255, 255, 0.018)',
                           cursor: 'pointer',
-                          '&:hover': { borderColor: 'warning.light' },
+                          transition:
+                            'border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease',
+                          '&:hover': {
+                            borderColor: fantasyColors.borderStrong,
+                            backgroundColor:
+                              selectedMediaPreview?.item.id === item.id
+                                ? 'rgba(87, 37, 45, 0.72)'
+                                : 'rgba(210, 173, 103, 0.055)',
+                          },
                         }}
                       >
                         <DragIndicatorIcon sx={{ fontSize: 16, cursor: 'grab', color: 'text.secondary' }} />
@@ -271,10 +368,29 @@ export function MediaLibraryPanel({ roomId }: MediaLibraryPanelProps) {
                           py: 1,
                           borderRadius: 1,
                           border: 1,
-                          borderColor: selectedMediaPreview?.item.id === item.id ? 'warning.main' : 'divider',
-                          bgcolor: selectedMediaPreview?.item.id === item.id ? 'rgba(255, 167, 38, 0.12)' : 'grey.50',
+                          borderColor:
+                            selectedMediaPreview?.item.id === item.id
+                              ? fantasyColors.gold
+                              : fantasyColors.border,
+                          color: fantasyColors.text,
+                          backgroundColor:
+                            selectedMediaPreview?.item.id === item.id
+                              ? 'rgba(87, 37, 45, 0.62)'
+                              : 'rgba(11, 9, 12, 0.38)',
+                          boxShadow:
+                            selectedMediaPreview?.item.id === item.id
+                              ? 'inset 3px 0 0 #d2ad67, 0 0 14px rgba(210, 173, 103, 0.08)'
+                              : 'inset 0 1px 0 rgba(255, 255, 255, 0.018)',
                           cursor: 'pointer',
-                          '&:hover': { borderColor: 'warning.light' },
+                          transition:
+                            'border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease',
+                          '&:hover': {
+                            borderColor: fantasyColors.borderStrong,
+                            backgroundColor:
+                              selectedMediaPreview?.item.id === item.id
+                                ? 'rgba(87, 37, 45, 0.72)'
+                                : 'rgba(210, 173, 103, 0.055)',
+                          },
                         }}
                       >
                         <DragIndicatorIcon sx={{ fontSize: 16, cursor: 'grab', color: 'text.secondary' }} />

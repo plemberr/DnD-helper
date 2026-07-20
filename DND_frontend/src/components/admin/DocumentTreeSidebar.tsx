@@ -9,7 +9,9 @@ import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { Box, IconButton, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import type { FolderNode, MediaType, TreeNode } from '../../data/library';
+import { fantasyColors, fantasyGradients } from '../../theme/fantasyTheme';
 
 const MEDIA_LIBRARY_DND_MIME = 'application/x-tenzor-media-library-item';
 
@@ -138,9 +140,15 @@ export function DocumentTreeSidebar({
                 px: 0.75,
                 py: 0.5,
                 borderRadius: 1,
-                bgcolor: isSelected ? 'warning.50' : 'transparent',
-                color: isSelected ? 'warning.dark' : 'text.primary',
-                '&:hover': { bgcolor: isSelected ? 'warning.100' : 'action.hover' },
+                bgcolor: isSelected ? alpha(fantasyColors.gold, 0.12) : 'transparent',
+                color: isSelected ? fantasyColors.goldLight : fantasyColors.text,
+                boxShadow: isSelected ? `inset 2px 0 0 ${fantasyColors.gold}` : 'none',
+                transition: 'background-color 140ms ease, color 140ms ease, box-shadow 140ms ease',
+                '&:hover': {
+                  bgcolor: isSelected
+                    ? alpha(fantasyColors.gold, 0.16)
+                    : alpha(fantasyColors.gold, 0.06),
+                },
               }}
             >
             {child.kind === 'folder' ? (
@@ -166,7 +174,7 @@ export function DocumentTreeSidebar({
 
             <button
               type="button"
-              style={{ display: 'flex', minWidth: 0, flex: 1, alignItems: 'center', background: 'none', border: 0, cursor: 'pointer', padding: 0 }}
+              style={{ display: 'flex', minWidth: 0, flex: 1, alignItems: 'center', background: 'none', border: 0, color: 'inherit', cursor: 'pointer', padding: 0 }}
               onClick={() => {
                 if (child.kind === 'document') {
                   onSelectDocument(child.id);
@@ -240,19 +248,60 @@ export function DocumentTreeSidebar({
           </div>
 
           {isNestedFolderExpanded && child.kind === 'folder' && (
-            <Box sx={{ ml: 2, pl: 1, borderLeft: 1, borderColor: 'divider' }}>{renderSidebarNodes(child.children, child.id)}</Box>
+            <Box sx={{ ml: 2, pl: 1, borderLeft: 1, borderColor: alpha(fantasyColors.gold, 0.16) }}>{renderSidebarNodes(child.children, child.id)}</Box>
           )}
         </Box>
       );
     });
 
   return (
-    <Box component="aside" sx={{ width: 240, flexShrink: 0, borderRight: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 1.5, py: 1.25, borderBottom: 1, borderColor: 'divider' }}>
-        <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+    <Box
+      component="aside"
+      sx={{
+        width: 240,
+        flexShrink: 0,
+        borderRight: `1px solid ${fantasyColors.border}`,
+        color: fantasyColors.text,
+        backgroundColor: fantasyColors.panel,
+        backgroundImage: fantasyGradients.panelRaised,
+        boxShadow: `inset -1px 0 0 ${alpha(fantasyColors.gold, 0.05)}, 10px 0 28px ${alpha('#000000', 0.16)}`,
+      }}
+    >
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{
+          px: 1.5,
+          py: 1.25,
+          borderBottom: `1px solid ${fantasyColors.border}`,
+          backgroundColor: alpha(fantasyColors.void, 0.34),
+        }}
+      >
+        <Typography
+          variant="overline"
+          sx={{
+            color: fantasyColors.gold,
+            fontWeight: 700,
+            letterSpacing: '0.16em',
+          }}
+        >
           Папки
         </Typography>
-        <IconButton size="small" onClick={onCreateFolder} aria-label="Создать папку">
+        <IconButton
+          size="small"
+          onClick={onCreateFolder}
+          aria-label="Создать папку"
+          sx={{
+            color: fantasyColors.gold,
+            border: `1px solid ${alpha(fantasyColors.gold, 0.18)}`,
+            '&:hover': {
+              color: fantasyColors.goldLight,
+              borderColor: alpha(fantasyColors.gold, 0.46),
+              backgroundColor: alpha(fantasyColors.gold, 0.08),
+            },
+          }}
+        >
           <AddIcon sx={{ fontSize: 16 }} />
         </IconButton>
       </Stack>
@@ -286,8 +335,15 @@ export function DocumentTreeSidebar({
                   px: 0.75,
                   py: 0.5,
                   borderRadius: 1,
-                  bgcolor: isActiveRoot ? 'warning.50' : 'transparent',
-                  color: isActiveRoot ? 'warning.dark' : 'text.primary',
+                  bgcolor: isActiveRoot ? alpha(fantasyColors.gold, 0.12) : 'transparent',
+                  color: isActiveRoot ? fantasyColors.goldLight : fantasyColors.text,
+                  boxShadow: isActiveRoot ? `inset 2px 0 0 ${fantasyColors.gold}` : 'none',
+                  transition: 'background-color 140ms ease, color 140ms ease, box-shadow 140ms ease',
+                  '&:hover': {
+                    bgcolor: isActiveRoot
+                      ? alpha(fantasyColors.gold, 0.16)
+                      : alpha(fantasyColors.gold, 0.06),
+                  },
                 }}
               >
                 <button
@@ -300,6 +356,7 @@ export function DocumentTreeSidebar({
                     textAlign: 'left',
                     background: 'none',
                     border: 0,
+                    color: 'inherit',
                     cursor: 'pointer',
                     minWidth: 0,
                     padding: 0,
@@ -334,7 +391,7 @@ export function DocumentTreeSidebar({
                 </IconButton>
               </Stack>
 
-              {isExpanded && <Box sx={{ ml: 2, pl: 1, borderLeft: 1, borderColor: 'divider' }}>{renderSidebarNodes(rootNode.children, rootNode.id)}</Box>}
+              {isExpanded && <Box sx={{ ml: 2, pl: 1, borderLeft: 1, borderColor: alpha(fantasyColors.gold, 0.16) }}>{renderSidebarNodes(rootNode.children, rootNode.id)}</Box>}
             </Box>
           );
         })}
