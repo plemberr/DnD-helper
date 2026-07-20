@@ -9,15 +9,16 @@ import { PlayerRoomShell } from '../components/playerRoom/PlayerRoomShell';
 import { playerRoomTheme } from '../components/playerRoom/playerRoomTheme';
 import '../components/playerRoom/playerRoom.css';
 import { usePlayerRoomStore } from '../store/playerRoomStore';
+import { readAccessToken, readCurrentUserId } from '../utils/authSession';
 import type { CharacterDraft } from '../types/playerCharacter';
-
-const CURRENT_USER_ID = 'current-user';
 
 export default function PlayerRoomPage() {
   const { roomId = '' } = useParams();
   const queryClient = useQueryClient();
   const enterRoom = usePlayerRoomStore((state) => state.enterRoom);
-  const characterQueryKey = ['player-character', roomId, CURRENT_USER_ID] as const;
+  const accessToken = readAccessToken();
+  const currentUserId = readCurrentUserId();
+  const characterQueryKey = ['player-character', roomId, currentUserId] as const;
 
   useEffect(() => {
     if (roomId) enterRoom(roomId);
@@ -25,12 +26,17 @@ export default function PlayerRoomPage() {
 
   const characterQuery = useQuery({
     queryKey: characterQueryKey,
-    queryFn: () => getPlayerCharacter(roomId, CURRENT_USER_ID),
-    enabled: Boolean(roomId),
+    queryFn: () => getPlayerCharacter(roomId, currentUserId!, accessToken),
+    enabled: Boolean(roomId && currentUserId),
   });
 
   const createCharacterMutation = useMutation({
-    mutationFn: (draft: CharacterDraft) => createPlayerCharacter(roomId, CURRENT_USER_ID, draft),
+    mutationFn: (draft: CharacterDraft) => {
+      if (!currentUserId || !accessToken) {
+        throw new Error('Нужна авторизация для создания персонажа.');
+      }
+      return createPlayerCharacter(roomId, currentUserId, draft, accessToken);
+    },
     onSuccess: (character) => {
       queryClient.setQueryData(characterQueryKey, character);
     },
@@ -41,6 +47,13 @@ export default function PlayerRoomPage() {
       return (
         <Box sx={{ height: '100%', display: 'grid', placeItems: 'center', p: 3 }}>
           <Alert severity="error">Не удалось определить идентификатор комнаты.</Alert>
+        </Box>
+      );
+    }
+    if (!currentUserId || !accessToken) {
+      return (
+        <Box sx={{ height: '100%', display: 'grid', placeItems: 'center', p: 3 }}>
+          <Alert severity="warning">Войдите в аккаунт, чтобы создать персонажа.</Alert>
         </Box>
       );
     }
@@ -82,7 +95,9 @@ export default function PlayerRoomPage() {
           isSubmitting={createCharacterMutation.isPending}
           submitError={
             createCharacterMutation.isError
-              ? 'Не удалось сохранить персонажа в localStorage. Попробуйте ещё раз.'
+              ? createCharacterMutation.error instanceof Error
+                ? createCharacterMutation.error.message
+                : 'Не удалось создать персонажа. Попробуйте ещё раз.'
               : undefined
           }
           onCreate={async (draft) => {

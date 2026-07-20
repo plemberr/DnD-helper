@@ -21,6 +21,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/content/, ''),
       },
+      '/api/characters': {
+        target: 'http://localhost:8004',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/characters/, ''),
+      },
       '/media': {
         target: 'http://localhost:8003',
         changeOrigin: true,
