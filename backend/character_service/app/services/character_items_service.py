@@ -7,7 +7,6 @@ from character_service.app.models import Character
 from character_service.app.repositories import character_repository
 from character_service.app.services.common import (
     require_character,
-    require_owner,
     require_owner_or_master,
     serialize_items,
     serialize_spells,
@@ -97,7 +96,7 @@ def _set_spells(character: Character, ids: list) -> None:
 
 async def add_spell(db, room_id: int, character_id: int, user_id: int, spell_id: str) -> Character:
     """
-    Добавляет заклинание персонажу. Доступно только владельцу персонажа
+    Добавляет заклинание персонажу. Доступно владельцу персонажа и мастеру
     :param db: сессия БД
     :param room_id: id комнаты
     :param character_id: id персонажа
@@ -106,7 +105,7 @@ async def add_spell(db, room_id: int, character_id: int, user_id: int, spell_id:
     :return: обновлённый персонаж
     """
     character = await require_character(db, room_id, character_id)
-    if not require_owner(character, user_id):
+    if not require_owner_or_master(character, room_id, user_id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Недостаточно прав")
 
     ids = list((character.spells or {}).get("ids", []))
@@ -132,7 +131,7 @@ async def get_spells(db, room_id: int, character_id: int) -> schemas.SpellsOut:
 
 async def remove_spell(db, room_id: int, character_id: int, user_id: int, spell_id: str) -> None:
     """
-    Удаляет заклинание у персонажа. Доступно только владельцу персонажа
+    Удаляет заклинание у персонажа. Доступно владельцу персонажа и мастеру
     :param db: сессия БД
     :param room_id: id комнаты
     :param character_id: id персонажа
@@ -141,7 +140,7 @@ async def remove_spell(db, room_id: int, character_id: int, user_id: int, spell_
     :return: ничего
     """
     character = await require_character(db, room_id, character_id)
-    if not require_owner(character, user_id):
+    if not require_owner_or_master(character, room_id, user_id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Недостаточно прав")
 
     ids = list((character.spells or {}).get("ids", []))

@@ -1,8 +1,8 @@
 """seed skills data
 
-Revision ID: 93f40a36b336
-Revises: b6f171af01ac
-Create Date: 2026-07-15 06:56:59.228518
+Revision ID: 6f5441af64d4
+Revises: 3b33ad22fb35
+Create Date: 2026-07-17 11:48:37.986345
 
 """
 from typing import Sequence, Union
@@ -11,8 +11,9 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision: str = "<...>"
-down_revision: Union[str, Sequence[str], None] = "b6f171af01ac"
+# revision identifiers, used by Alembic.
+revision: str = '6f5441af64d4'
+down_revision: Union[str, Sequence[str], None] = '3b33ad22fb35'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

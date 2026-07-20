@@ -91,15 +91,16 @@ async def require_room_master(
     if response.status_code != status.HTTP_200_OK:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Не удалось получить данные комнаты")
 
-    master_id = None
-    for member in response.json()["items"]:
-        if member["role"] == "master":
-            master_id = member["user_id"]
-            break
+    allowed = any(
+        member["user_id"] == user_id
+        and member["role"] in {"master", "co_master"}
+        for member in response.json()["items"]
+    )
 
-    if master_id is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Мастер комнаты не найден")
+    if not allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Требуются права мастера или со-мастера комнаты",
+        )
 
-    if master_id != user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Требуются права мастера комнаты")
     return user_id

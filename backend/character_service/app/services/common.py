@@ -44,7 +44,7 @@ def require_owner(character: Character, user_id: int) -> bool:
 
 async def require_owner_or_master(character: Character, room_id: int, user_id: int) -> None:
     """
-    Проверяет, что пользователь является владельцем персонажа либо мастером комнаты
+    Проверяет, что пользователь является владельцем персонажа либо мастером / co-мастером комнаты
     :param character: проверяемый персонаж
     :param room_id: id комнаты
     :param user_id: id пользователя

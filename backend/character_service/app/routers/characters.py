@@ -81,7 +81,7 @@ async def delete_character(
 
 # заклинания
 @router.post(
-    "/rooms/{room_id}/characters/{character_id}/spells",
+    "/characters/{character_id}/spells",
     response_model=schemas.SpellAddOut,
     status_code=status.HTTP_201_CREATED,
 )
