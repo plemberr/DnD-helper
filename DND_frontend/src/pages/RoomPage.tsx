@@ -34,7 +34,7 @@ export function RoomPage({ onOpenAdmin, onOpenRoom }: RoomPageProps) {
         <AppHeader isRoomScreen onOpenAdmin={onOpenAdmin} onOpenRoom={onOpenRoom} />
 
         <Box component="main" sx={{ display: 'flex', minHeight: 0, flex: 1, width: '100%' }}>
-          <Box component="aside" sx={{ width: 240, flexShrink: 0, borderRight: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+          <Box component="aside" sx={{ width: 240, flexShrink: 0, borderRight: 1, borderColor: 'divider', bgcolor: fantasyTokens.bgPanel }}>
             <Box sx={{ px: 1.5, py: 1.25, borderBottom: 1, borderColor: 'divider' }}>
               <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
                 Описание
@@ -61,8 +61,8 @@ export function RoomPage({ onOpenAdmin, onOpenRoom }: RoomPageProps) {
             </Box>
           </Box>
 
-          <Box component="section" sx={{ display: 'flex', minWidth: 0, flex: 1, flexDirection: 'column', borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ height: 40, px: 1.5, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.100' }}>
+          <Box component="section" sx={{ display: 'flex', minWidth: 0, flex: 1, flexDirection: 'column', borderRight: 1, borderColor: 'divider', bgcolor: fantasyTokens.bgPanel }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ height: 40, px: 1.5, borderBottom: 1, borderColor: 'divider', bgcolor: fantasyTokens.bgPanelRaised }}>
               <Chip size="small" label="Комната мастера" variant="outlined" />
               <Typography variant="body2" color="text.disabled">
                 /
@@ -95,8 +95,8 @@ export function RoomPage({ onOpenAdmin, onOpenRoom }: RoomPageProps) {
             </Box>
           </Box>
 
-          <Box component="aside" sx={{ display: 'flex', width: 340, flexShrink: 0, flexDirection: 'column', borderLeft: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ height: 48, px: 1.5, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+          <Box component="aside" sx={{ display: 'flex', width: 340, flexShrink: 0, flexDirection: 'column', borderLeft: 1, borderColor: 'divider', bgcolor: fantasyTokens.bgPanel }}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ height: 48, px: 1.5, borderBottom: 1, borderColor: 'divider', bgcolor: fantasyTokens.bgPanelRaised }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                 Игроки
               </Typography>

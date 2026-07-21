@@ -13,6 +13,7 @@ import { contentService } from '../../api/contentService';
 import { mediaLibraries, type MediaItem, type MediaType } from '../../data/library';
 import { useMediaLibraryStore } from '../../store/mediaLibraryStore';
 import { readAccessToken } from '../../utils/authSession';
+import { fantasyTokens } from '../../theme/fantasyTheme';
 
 const MEDIA_LIBRARY_DND_MIME = 'application/x-tenzor-media-library-item';
 
@@ -152,8 +153,8 @@ export function MediaLibraryPanel({ roomId }: MediaLibraryPanelProps) {
   };
 
   return (
-    <Box component="aside" sx={{ width: 340, flexShrink: 0, display: 'flex', flexDirection: 'column', borderLeft: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-      <Stack direction="row" alignItems="center" sx={{ px: 1.5, height: 48, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+    <Box component="aside" sx={{ width: 340, flexShrink: 0, display: 'flex', flexDirection: 'column', borderLeft: 1, borderColor: 'divider', bgcolor: fantasyTokens.bgPanel }}>
+      <Stack direction="row" alignItems="center" sx={{ px: 1.5, height: 48, borderBottom: 1, borderColor: 'divider', bgcolor: fantasyTokens.bgPanelRaised }}>
         <Typography variant="subtitle1" sx={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>
           Библиотека медиа файлов
         </Typography>
@@ -224,7 +225,7 @@ export function MediaLibraryPanel({ roomId }: MediaLibraryPanelProps) {
                           borderRadius: 1,
                           border: 1,
                           borderColor: selectedMediaPreview?.item.id === item.id ? 'warning.main' : 'divider',
-                          bgcolor: selectedMediaPreview?.item.id === item.id ? 'rgba(255, 167, 38, 0.12)' : 'grey.50',
+                          bgcolor: selectedMediaPreview?.item.id === item.id ? 'rgba(210, 173, 103, 0.16)' : fantasyTokens.bgPanel,
                           cursor: 'pointer',
                           '&:hover': { borderColor: 'warning.light' },
                         }}
@@ -272,7 +273,7 @@ export function MediaLibraryPanel({ roomId }: MediaLibraryPanelProps) {
                           borderRadius: 1,
                           border: 1,
                           borderColor: selectedMediaPreview?.item.id === item.id ? 'warning.main' : 'divider',
-                          bgcolor: selectedMediaPreview?.item.id === item.id ? 'rgba(255, 167, 38, 0.12)' : 'grey.50',
+                          bgcolor: selectedMediaPreview?.item.id === item.id ? 'rgba(210, 173, 103, 0.16)' : fantasyTokens.bgPanel,
                           cursor: 'pointer',
                           '&:hover': { borderColor: 'warning.light' },
                         }}

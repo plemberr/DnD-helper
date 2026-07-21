@@ -21,7 +21,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { TextFileNode } from '../../data/library';
-import { ornateCornersSx } from '../../theme/fantasyTheme';
+import { fantasyTokens, ornateCornersSx } from '../../theme/fantasyTheme';
 import { FantasyAudioPlayer } from '../audio/FantasyAudioPlayer';
 import { useMediaLibraryStore } from '../../store/mediaLibraryStore';
 
@@ -136,12 +136,31 @@ export function DocumentWorkspace({
       }
 
       return (
-        <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 1 }}>
+        <Box
+          sx={{
+            width: '100%',
+            height: '100%',
+            minHeight: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            p: 1,
+            overflow: 'hidden',
+          }}
+        >
           <Box
             component="img"
             src={selectedMediaPreview.item.fileUrl}
             alt={selectedMediaPreview.item.name}
-            sx={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 1 }}
+            sx={{
+              maxWidth: '100%',
+              maxHeight: '100%',
+              width: 'auto',
+              height: 'auto',
+              objectFit: 'contain',
+              borderRadius: 1,
+              display: 'block',
+            }}
           />
         </Box>
       );
@@ -175,10 +194,10 @@ export function DocumentWorkspace({
         flexDirection: 'column',
         borderRight: 1,
         borderColor: 'divider',
-        bgcolor: 'background.paper',
+        bgcolor: fantasyTokens.bgPanel,
       }}
     >
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1, pt: 1, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.100' }}>
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1, pt: 1, borderBottom: 1, borderColor: 'divider', bgcolor: fantasyTokens.bgPanelRaised }}>
         <Tabs
           value={hasTabs ? activeTabId : false}
           onChange={(_, value) => onSetActiveTabId(value)}
@@ -236,7 +255,7 @@ export function DocumentWorkspace({
             </Stack>
 
             <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, minHeight: 0, flex: 1 }}>
-              <Paper variant="outlined" sx={{ ...ornateCornersSx, p: 2, display: 'flex', minHeight: 0, flexDirection: 'column', bgcolor: 'grey.50' }}>
+              <Paper variant="outlined" sx={{ ...ornateCornersSx, p: 2, display: 'flex', minHeight: 0, flexDirection: 'column', bgcolor: fantasyTokens.bgPanelRaised }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ pb: 1, borderBottom: 1, borderColor: 'divider' }}>
                   <Box sx={{ minWidth: 0 }}>
                     <Typography variant="subtitle2" noWrap>
@@ -273,7 +292,7 @@ export function DocumentWorkspace({
                     }}
                     sx={{
                       '& .MuiToggleButton-root': { color: 'text.secondary', borderColor: 'divider', textTransform: 'none' },
-                      '& .MuiToggleButton-root.Mui-selected': { color: 'text.primary', bgcolor: 'grey.100' },
+                      '& .MuiToggleButton-root.Mui-selected': { color: 'text.primary', bgcolor: 'rgba(210, 173, 103, 0.16)' },
                     }}
                   >
                     <ToggleButton value="preview">Просмотр</ToggleButton>
@@ -293,7 +312,7 @@ export function DocumentWorkspace({
                       flex: 1,
                       '& .MuiInputBase-root': { height: '100%', alignItems: 'flex-start' },
                       '& .MuiOutlinedInput-root': {
-                        bgcolor: 'background.paper',
+                        bgcolor: fantasyTokens.bgField,
                         '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
                         '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.secondary' },
                         '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'warning.main' },
@@ -311,7 +330,7 @@ export function DocumentWorkspace({
                       border: 1,
                       borderColor: 'divider',
                       borderRadius: 1,
-                      bgcolor: 'background.paper',
+                      bgcolor: fantasyTokens.bgField,
                       '& h1, & h2, & h3': { mt: 2, mb: 1, lineHeight: 1.3 },
                       '& h1': { fontSize: 28 },
                       '& h2': { fontSize: 22 },
@@ -326,14 +345,14 @@ export function DocumentWorkspace({
                       },
                       '& code': {
                         fontFamily: 'monospace',
-                        bgcolor: 'grey.100',
+                        bgcolor: 'rgba(0, 0, 0, 0.32)',
                         px: 0.5,
                         borderRadius: 0.5,
                       },
                       '& pre': {
                         p: 1.5,
                         borderRadius: 1,
-                        bgcolor: 'grey.100',
+                        bgcolor: 'rgba(0, 0, 0, 0.32)',
                         overflow: 'auto',
                       },
                       '& a': {
@@ -380,11 +399,12 @@ export function DocumentWorkspace({
                     mt: 2,
                     p: 2,
                     flex: 1,
-                    overflow: 'auto',
+                    minHeight: 0,
+                    overflow: 'hidden',
                     border: 1,
                     borderColor: 'divider',
                     borderRadius: 1,
-                    bgcolor: 'grey.50',
+                    bgcolor: fantasyTokens.bgField,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -408,7 +428,7 @@ export function DocumentWorkspace({
               justifyContent: 'center',
               textAlign: 'center',
               gap: 1,
-              bgcolor: 'grey.50',
+              bgcolor: fantasyTokens.bgPanelRaised,
             }}
           >
             <DescriptionOutlinedIcon sx={{ color: 'warning.main', fontSize: 28 }} />

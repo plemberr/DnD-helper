@@ -138,9 +138,9 @@ export function DocumentTreeSidebar({
                 px: 0.75,
                 py: 0.5,
                 borderRadius: 1,
-                bgcolor: isSelected ? 'warning.50' : 'transparent',
-                color: isSelected ? 'warning.dark' : 'text.primary',
-                '&:hover': { bgcolor: isSelected ? 'warning.100' : 'action.hover' },
+                bgcolor: isSelected ? 'rgba(210, 173, 103, 0.15)' : 'transparent',
+                color: isSelected ? 'text.primary' : 'text.primary',
+                '&:hover': { bgcolor: isSelected ? 'rgba(210, 173, 103, 0.2)' : 'action.hover' },
               }}
             >
             {child.kind === 'folder' ? (
@@ -247,7 +247,7 @@ export function DocumentTreeSidebar({
     });
 
   return (
-    <Box component="aside" sx={{ width: 240, flexShrink: 0, borderRight: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+    <Box component="aside" sx={{ width: 240, flexShrink: 0, borderRight: 1, borderColor: 'divider', bgcolor: 'background.default' }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 1.5, py: 1.25, borderBottom: 1, borderColor: 'divider' }}>
         <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
           Папки
@@ -286,8 +286,8 @@ export function DocumentTreeSidebar({
                   px: 0.75,
                   py: 0.5,
                   borderRadius: 1,
-                  bgcolor: isActiveRoot ? 'warning.50' : 'transparent',
-                  color: isActiveRoot ? 'warning.dark' : 'text.primary',
+                  bgcolor: isActiveRoot ? 'rgba(210, 173, 103, 0.15)' : 'transparent',
+                  color: 'text.primary',
                 }}
               >
                 <button
