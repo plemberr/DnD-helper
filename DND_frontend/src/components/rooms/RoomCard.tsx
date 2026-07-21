@@ -1,5 +1,6 @@
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
+import PersonAddAlt1RoundedIcon from '@mui/icons-material/PersonAddAlt1Rounded';
 import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded';
 import {
   Box,
@@ -14,6 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
 
 import { fantasyColors } from '../../theme/fantasyTheme';
 import type { Room } from '../../types/room';
@@ -99,9 +101,12 @@ export function RoomCard({
   onDetails,
   onPrimaryAction,
 }: RoomCardProps) {
+  const navigate = useNavigate();
   const status = statusMap[room.membership];
   const primaryButton = getPrimaryButton(room);
   const hasCover = Boolean(room.coverUrl?.trim());
+  const canCreateCharacter =
+    room.membership === 'owner' || room.membership === 'member';
 
   return (
     <Card
@@ -394,6 +399,33 @@ export function RoomCard({
         >
           {primaryButton.label}
         </Button>
+
+        <Tooltip
+          title={
+            canCreateCharacter
+              ? 'Перейти к созданию или листу персонажа'
+              : 'Сначала вступите в комнату'
+          }
+        >
+          <Box component="span" sx={{ display: 'block', width: '100%' }}>
+            <Button
+              size="small"
+              variant="outlined"
+              fullWidth
+              startIcon={<PersonAddAlt1RoundedIcon />}
+              onClick={() => navigate(`/room/${room.id}`)}
+              disabled={!canCreateCharacter}
+              sx={{
+                minWidth: 0,
+                minHeight: 40,
+                lineHeight: 1.25,
+                whiteSpace: 'normal',
+              }}
+            >
+              Создать персонажа
+            </Button>
+          </Box>
+        </Tooltip>
       </CardActions>
     </Card>
   );
