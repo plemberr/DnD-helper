@@ -21,7 +21,12 @@ import {
   Typography,
 } from '@mui/material';
 import type { TextFileNode } from '../../data/library';
-import { fantasyTokens, ornateCornersSx } from '../../theme/fantasyTheme';
+import {
+  fantasyColors,
+  fantasyGradients,
+  fantasyShadows,
+  ornateCornersSx,
+} from '../../theme/fantasyTheme';
 import { FantasyAudioPlayer } from '../audio/FantasyAudioPlayer';
 import { useMediaLibraryStore } from '../../store/mediaLibraryStore';
 
@@ -193,11 +198,25 @@ export function DocumentWorkspace({
         display: 'flex',
         flexDirection: 'column',
         borderRight: 1,
-        borderColor: 'divider',
-        bgcolor: fantasyTokens.bgPanel,
+        borderColor: fantasyColors.border,
+        backgroundColor: fantasyColors.panel,
+        backgroundImage: fantasyGradients.panel,
       }}
     >
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1, pt: 1, borderBottom: 1, borderColor: 'divider', bgcolor: fantasyTokens.bgPanelRaised }}>
+      <Stack
+        direction="row"
+        alignItems="center"
+        spacing={1}
+        sx={{
+          px: 1,
+          pt: 1,
+          borderBottom: 1,
+          borderColor: fantasyColors.border,
+          backgroundColor: fantasyColors.panelRaised,
+          backgroundImage: fantasyGradients.panelRaised,
+          boxShadow: `inset 0 -1px 0 rgba(210, 173, 103, 0.08)`,
+        }}
+      >
         <Tabs
           value={hasTabs ? activeTabId : false}
           onChange={(_, value) => onSetActiveTabId(value)}
@@ -206,9 +225,22 @@ export function DocumentWorkspace({
           sx={{
             minHeight: 38,
             flex: 1,
-            '& .MuiTab-root': { minHeight: 38, py: 0.5, color: 'text.secondary' },
-            '& .MuiTab-root.Mui-selected': { color: 'text.primary' },
-            '& .MuiTabs-indicator': { bgcolor: 'warning.main' },
+            '& .MuiTab-root': {
+              minHeight: 38,
+              py: 0.5,
+              color: fantasyColors.textMuted,
+            },
+            '& .MuiTab-root:hover': {
+              color: fantasyColors.text,
+              backgroundColor: 'rgba(210, 173, 103, 0.045)',
+            },
+            '& .MuiTab-root.Mui-selected': {
+              color: fantasyColors.goldLight,
+            },
+            '& .MuiTabs-indicator': {
+              background: `linear-gradient(90deg, transparent, ${fantasyColors.gold}, transparent)`,
+              boxShadow: `0 0 12px rgba(210, 173, 103, 0.5)`,
+            },
           }}
         >
           {tabs.map((tab) => {
@@ -244,7 +276,17 @@ export function DocumentWorkspace({
         </IconButton>
       </Stack>
 
-      <Box sx={{ p: 2, minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <Box
+        sx={{
+          p: 2,
+          minHeight: 0,
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          background:
+            'radial-gradient(circle at 50% 0%, rgba(87, 37, 45, 0.13), transparent 34%), #110e12',
+        }}
+      >
         {hasTabs ? (
           <>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
@@ -255,7 +297,22 @@ export function DocumentWorkspace({
             </Stack>
 
             <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, minHeight: 0, flex: 1 }}>
-              <Paper variant="outlined" sx={{ ...ornateCornersSx, p: 2, display: 'flex', minHeight: 0, flexDirection: 'column', bgcolor: fantasyTokens.bgPanelRaised }}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  ...ornateCornersSx,
+                  p: 2,
+                  display: 'flex',
+                  minHeight: 0,
+                  flexDirection: 'column',
+                  color: fantasyColors.text,
+                  backgroundColor: '#2a211d',
+                  backgroundImage:
+                    'linear-gradient(145deg, rgba(234, 211, 158, 0.035), transparent 34%), linear-gradient(180deg, rgba(87, 37, 45, 0.11), transparent 58%)',
+                  borderColor: fantasyColors.borderStrong,
+                  boxShadow: fantasyShadows.panel,
+                }}
+              >
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ pb: 1, borderBottom: 1, borderColor: 'divider' }}>
                   <Box sx={{ minWidth: 0 }}>
                     <Typography variant="subtitle2" noWrap>
@@ -291,8 +348,22 @@ export function DocumentWorkspace({
                       }
                     }}
                     sx={{
-                      '& .MuiToggleButton-root': { color: 'text.secondary', borderColor: 'divider', textTransform: 'none' },
-                      '& .MuiToggleButton-root.Mui-selected': { color: 'text.primary', bgcolor: 'rgba(210, 173, 103, 0.16)' },
+                      '& .MuiToggleButton-root': {
+                        color: fantasyColors.textMuted,
+                        borderColor: fantasyColors.border,
+                        textTransform: 'none',
+                      },
+                      '& .MuiToggleButton-root:hover': {
+                        color: fantasyColors.goldLight,
+                        backgroundColor: 'rgba(210, 173, 103, 0.06)',
+                      },
+                      '& .MuiToggleButton-root.Mui-selected': {
+                        color: fantasyColors.goldLight,
+                        backgroundColor: 'rgba(87, 37, 45, 0.62)',
+                      },
+                      '& .MuiToggleButton-root.Mui-selected:hover': {
+                        backgroundColor: 'rgba(87, 37, 45, 0.72)',
+                      },
                     }}
                   >
                     <ToggleButton value="preview">Просмотр</ToggleButton>
@@ -312,10 +383,20 @@ export function DocumentWorkspace({
                       flex: 1,
                       '& .MuiInputBase-root': { height: '100%', alignItems: 'flex-start' },
                       '& .MuiOutlinedInput-root': {
-                        bgcolor: fantasyTokens.bgField,
-                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
-                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.secondary' },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'warning.main' },
+                        color: fantasyColors.text,
+                        backgroundColor: '#241a1d',
+                        backgroundImage:
+                          'linear-gradient(180deg, rgba(210, 173, 103, 0.025), transparent 22%)',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: fantasyColors.border,
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: fantasyColors.borderStrong,
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: fantasyColors.gold,
+                          boxShadow: '0 0 0 2px rgba(210, 173, 103, 0.08)',
+                        },
                       },
                     }}
                     slotProps={{ input: { sx: { fontFamily: 'monospace', fontSize: 14, lineHeight: 1.7 } } }}
@@ -330,8 +411,17 @@ export function DocumentWorkspace({
                       border: 1,
                       borderColor: 'divider',
                       borderRadius: 1,
-                      bgcolor: fantasyTokens.bgField,
-                      '& h1, & h2, & h3': { mt: 2, mb: 1, lineHeight: 1.3 },
+                      color: fantasyColors.text,
+                      backgroundColor: '#2a211d',
+                      backgroundImage:
+                        'linear-gradient(145deg, rgba(234, 211, 158, 0.028), transparent 32%)',
+                      boxShadow: 'inset 0 1px 18px rgba(0, 0, 0, 0.18)',
+                      '& h1, & h2, & h3': {
+                        mt: 2,
+                        mb: 1,
+                        lineHeight: 1.3,
+                        color: fantasyColors.goldLight,
+                      },
                       '& h1': { fontSize: 28 },
                       '& h2': { fontSize: 22 },
                       '& p': { my: 1.2 },
@@ -345,18 +435,22 @@ export function DocumentWorkspace({
                       },
                       '& code': {
                         fontFamily: 'monospace',
-                        bgcolor: 'rgba(0, 0, 0, 0.32)',
+                        color: fantasyColors.goldLight,
+                        backgroundColor: '#171215',
+                        border: `1px solid ${fantasyColors.border}`,
                         px: 0.5,
                         borderRadius: 0.5,
                       },
                       '& pre': {
                         p: 1.5,
                         borderRadius: 1,
-                        bgcolor: 'rgba(0, 0, 0, 0.32)',
+                        color: fantasyColors.text,
+                        backgroundColor: '#171215',
+                        border: `1px solid ${fantasyColors.border}`,
                         overflow: 'auto',
                       },
                       '& a': {
-                        color: 'warning.dark',
+                        color: fantasyColors.goldLight,
                       },
                     }}
                   >
@@ -380,7 +474,21 @@ export function DocumentWorkspace({
                 </Stack>
               </Paper>
 
-              <Paper variant="outlined" sx={{ ...ornateCornersSx, p: 2, display: 'flex', minHeight: 0, flexDirection: 'column' }}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  ...ornateCornersSx,
+                  p: 2,
+                  display: 'flex',
+                  minHeight: 0,
+                  flexDirection: 'column',
+                  color: fantasyColors.text,
+                  backgroundColor: fantasyColors.panelRaised,
+                  backgroundImage: fantasyGradients.panelRaised,
+                  borderColor: fantasyColors.borderStrong,
+                  boxShadow: fantasyShadows.panel,
+                }}
+              >
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
                   {selectedMediaPreview?.mediaType === 'picture' ? (
                     <ImageOutlinedIcon sx={{ color: 'warning.main', fontSize: 18 }} />
@@ -402,9 +510,13 @@ export function DocumentWorkspace({
                     minHeight: 0,
                     overflow: 'hidden',
                     border: 1,
-                    borderColor: 'divider',
+                    borderColor: fantasyColors.border,
                     borderRadius: 1,
-                    bgcolor: fantasyTokens.bgField,
+                    color: fantasyColors.text,
+                    backgroundColor: '#241a1d',
+                    backgroundImage:
+                      'radial-gradient(circle at 50% 28%, rgba(87, 37, 45, 0.16), transparent 48%)',
+                    boxShadow: 'inset 0 1px 22px rgba(0, 0, 0, 0.28)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -428,7 +540,11 @@ export function DocumentWorkspace({
               justifyContent: 'center',
               textAlign: 'center',
               gap: 1,
-              bgcolor: fantasyTokens.bgPanelRaised,
+              color: fantasyColors.text,
+              backgroundColor: fantasyColors.panelRaised,
+              backgroundImage: fantasyGradients.panelRaised,
+              borderColor: fantasyColors.borderStrong,
+              boxShadow: fantasyShadows.panel,
             }}
           >
             <DescriptionOutlinedIcon sx={{ color: 'warning.main', fontSize: 28 }} />

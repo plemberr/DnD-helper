@@ -230,7 +230,20 @@ export function RoomPage({ onOpenAdmin, onOpenRoom }: RoomPageProps) {
               <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
                 Описание
               </Typography>
-              <Paper variant="outlined" sx={{ mt: 1.5, p: 1.5 }}>
+
+              <Paper
+                variant="outlined"
+                sx={{
+                  mt: 1.5,
+                  p: 1.5,
+                  color: fantasyColors.text,
+                  backgroundColor: '#2a211d',
+                  backgroundImage:
+                    'linear-gradient(145deg, rgba(234, 211, 158, 0.035), transparent 38%)',
+                  borderColor: fantasyColors.border,
+                  boxShadow: fantasyShadows.panel,
+                }}
+              >
                 <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
                   {room?.description?.trim() || 'Описание комнаты пока не добавлено.'}
                 </Typography>
@@ -403,7 +416,16 @@ export function RoomPage({ onOpenAdmin, onOpenRoom }: RoomPageProps) {
                 </Paper>
               )}
 
-              <Paper variant="outlined" sx={{ mt: 2, p: 1.5 }}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  mt: 2,
+                  p: 1.5,
+                  backgroundColor: '#1d1519',
+                  borderColor: fantasyColors.border,
+                  boxShadow: fantasyShadows.panel,
+                }}
+              >
                 <Button fullWidth variant="outlined" color="warning" sx={{ py: 1.5 }}>
                   Открыть полный лист персонажа
                 </Button>
