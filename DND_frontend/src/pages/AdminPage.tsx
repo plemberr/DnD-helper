@@ -197,7 +197,7 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
         await loadAdminData(activeRoomId, accessToken);
       } catch (error) {
         if (isMounted) {
-          setAdminError(error instanceof Error ? error.message : 'Не удалось загрузить данные админки.');
+          setAdminError(error instanceof Error ? error.message : 'Не  удалось загрузить данные админки.');
         }
       } finally {
         if (isMounted) {

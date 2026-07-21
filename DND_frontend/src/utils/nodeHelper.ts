@@ -106,6 +106,11 @@ const removeNodeFromChildren = (children: TreeNode[], nodeId: string): { childre
   const nextChildren: TreeNode[] = [];
 
   for (const child of children) {
+    if (removed) {
+      nextChildren.push(child);
+      continue;
+    }
+
     if (child.id === nodeId) {
       removed = child;
       continue;
@@ -130,13 +135,18 @@ const removeNodeFromChildren = (children: TreeNode[], nodeId: string): { childre
 };
 
 const removeNodeById = (tree: FolderNode[], nodeId: string): { tree: FolderNode[]; removed: TreeNode | null } => {
-  const isRootFolder = tree.some((folder) => folder.id === nodeId);
   let removed: TreeNode | null = null;
+  const nextTree: FolderNode[] = [];
 
-  const nextTree = tree.map((folder) => {
+  for (const folder of tree) {
+    if (removed) {
+      nextTree.push(folder);
+      continue;
+    }
+
     if (folder.id === nodeId) {
       removed = folder;
-      return folder;
+      continue;
     }
 
     const updatedChildren = removeNodeFromChildren(folder.children, nodeId);
@@ -144,14 +154,10 @@ const removeNodeById = (tree: FolderNode[], nodeId: string): { tree: FolderNode[
       removed = updatedChildren.removed;
     }
 
-    return {
+    nextTree.push({
       ...folder,
       children: updatedChildren.children,
-    };
-  });
-
-  if (isRootFolder) {
-    return { tree: nextTree.filter((folder) => folder.id !== nodeId), removed };
+    });
   }
 
   return { tree: nextTree, removed };
