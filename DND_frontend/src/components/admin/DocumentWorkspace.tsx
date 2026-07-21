@@ -141,12 +141,31 @@ export function DocumentWorkspace({
       }
 
       return (
-        <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 1 }}>
+        <Box
+          sx={{
+            width: '100%',
+            height: '100%',
+            minHeight: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            p: 1,
+            overflow: 'hidden',
+          }}
+        >
           <Box
             component="img"
             src={selectedMediaPreview.item.fileUrl}
             alt={selectedMediaPreview.item.name}
-            sx={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 1 }}
+            sx={{
+              maxWidth: '100%',
+              maxHeight: '100%',
+              width: 'auto',
+              height: 'auto',
+              objectFit: 'contain',
+              borderRadius: 1,
+              display: 'block',
+            }}
           />
         </Box>
       );
@@ -488,7 +507,8 @@ export function DocumentWorkspace({
                     mt: 2,
                     p: 2,
                     flex: 1,
-                    overflow: 'auto',
+                    minHeight: 0,
+                    overflow: 'hidden',
                     border: 1,
                     borderColor: fantasyColors.border,
                     borderRadius: 1,

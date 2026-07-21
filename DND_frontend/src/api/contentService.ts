@@ -28,6 +28,7 @@ interface MediaFileOutDto {
   id: number;
   room_id: number;
   type: 'image' | 'audio';
+  original_name?: string;
   url: string | null;
   thumbnail_url: string | null;
   duration_seconds: number | null;
@@ -108,9 +109,11 @@ function toFileNameFromUrl(url: string | null, fallbackPrefix: string, id: numbe
 }
 
 function toMediaItem(media: MediaFileOutDto): MediaItem {
+  const resolvedName = media.original_name?.trim() || toFileNameFromUrl(media.url, media.type, media.id);
+
   return {
     id: `media-${media.id}`,
-    name: toFileNameFromUrl(media.url, media.type, media.id),
+    name: resolvedName,
     kind: 'file',
     fileUrl: media.url ?? undefined,
   };

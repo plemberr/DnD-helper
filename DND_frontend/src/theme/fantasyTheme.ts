@@ -405,6 +405,13 @@ export const fantasyTheme = createTheme({
             color: alpha(fantasyColors.textMuted, 0.82),
             opacity: 1,
           },
+          '&:-webkit-autofill, &:-webkit-autofill:hover, &:-webkit-autofill:focus': {
+            WebkitTextFillColor: fantasyColors.text,
+            WebkitBoxShadow: `0 0 0 100px ${alpha(fantasyColors.void, 0.48)} inset`,
+            caretColor: fantasyColors.text,
+            borderRadius: 'inherit',
+            transition: 'background-color 9999s ease-out 0s',
+          },
         },
       },
     },

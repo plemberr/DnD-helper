@@ -479,11 +479,11 @@ export function AdminPage({ onOpenAdmin, onOpenRoom }: AdminPageProps) {
   };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', width: '100%', flexDirection: 'column', overflowX: 'hidden', background: fantasyPageBackground, color: 'text.primary' }}>
-      <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
+    <Box sx={{ display: 'flex', height: '100vh', width: '100%', flexDirection: 'column', overflow: 'hidden', background: fantasyPageBackground, color: 'text.primary' }}>
+      <Box sx={{ display: 'flex', flex: 1, minHeight: 0, flexDirection: 'column' }}>
         <AppHeader isRoomScreen={false} onOpenAdmin={onOpenAdmin} onOpenRoom={onOpenRoom} />
 
-        <Box component="main" sx={{ display: 'flex', minHeight: 0, flex: 1, width: '100%' }}>
+        <Box component="main" sx={{ display: 'flex', minHeight: 0, flex: 1, width: '100%', overflow: 'hidden' }}>
           <DocumentTreeSidebar
             documentRoots={documentRoots}
             expandedFolders={expandedFolders}
