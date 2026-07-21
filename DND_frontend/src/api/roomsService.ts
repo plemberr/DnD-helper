@@ -34,6 +34,41 @@ interface RoomOutDto {
   master_id: number;
 }
 
+type RoomMemberRole = 'master' | 'co_master' | 'player';
+type JoinRequestStatus = 'pending' | 'accepted' | 'rejected';
+
+interface RoomMemberDto {
+  user_id: number;
+  username: string;
+  role: RoomMemberRole;
+}
+
+interface RoomDetailDto {
+  id: number;
+  title: string;
+  description: string | null;
+  player_limit: number;
+  cover_image_url: string | null;
+  created_at: string;
+  members: RoomMemberDto[];
+}
+
+interface JoinRequestDto {
+  id: number;
+  room_id: number;
+  user_id: number;
+  status: JoinRequestStatus;
+}
+
+interface JoinRequestListItemDto extends JoinRequestDto {
+  username: string;
+  created_at: string;
+}
+
+interface JoinRequestsListResponseDto {
+  items: JoinRequestListItemDto[];
+}
+
 async function parseError(response: Response): Promise<never> {
   let message = `Request failed with status ${response.status}`;
 
@@ -123,6 +158,44 @@ export const roomsService = {
       accessToken,
     );
   },
+
+  get(roomId: number) {
+    return request<RoomDetailDto>(`/${roomId}`);
+  },
+
+  listJoinRequests(roomId: number, accessToken: string, status: JoinRequestStatus = 'pending') {
+    const searchParams = new URLSearchParams({ status });
+    return request<JoinRequestsListResponseDto>(
+      `/${roomId}/requests?${searchParams.toString()}`,
+      undefined,
+      accessToken,
+    );
+  },
+
+  processJoinRequest(
+    roomId: number,
+    requestId: number,
+    status: Extract<JoinRequestStatus, 'accepted' | 'rejected'>,
+    accessToken: string,
+  ) {
+    return request<JoinRequestDto>(
+      `/${roomId}/requests/${requestId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      },
+      accessToken,
+    );
+  },
 };
 
-export type { RoomListItemDto, RoomsListResponseDto, RoomOutDto };
+export type {
+  JoinRequestListItemDto,
+  JoinRequestStatus,
+  RoomDetailDto,
+  RoomListItemDto,
+  RoomMemberDto,
+  RoomMemberRole,
+  RoomOutDto,
+  RoomsListResponseDto,
+};
