@@ -1,35 +1,63 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  server: {
-    proxy: {
-      '/api/auth': {
-        target: 'http://localhost:8001',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/auth/, '/auth'),
-      },
-      '/api/rooms': {
-        target: 'http://localhost:8002',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/rooms/, '/rooms'),
-      },
-      '/api/content': {
-        target: 'http://localhost:8003',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/content/, ''),
-      },
-      '/api/characters': {
-        target: 'http://localhost:8004',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/characters/, ''),
-      },
-      '/media': {
-        target: 'http://localhost:8003',
-        changeOrigin: true,
-      },
-    },
-  },
+function requireEnv(
+  env: Record<string, string>,
+  variableName: string,
+): string {
+  const value = env[variableName]?.trim();
+
+  if (!value) {
+    throw new Error(
+      `Не задана переменная окружения ${variableName}. Проверьте DND_frontend/.env`,
+    );
+  }
+
+  return value;
+}
+
+export default defineConfig(({ command, mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+
+  const server =
+    command === 'serve'
+      ? {
+          proxy: {
+            '/api/auth': {
+              target: requireEnv(env, 'AUTH_PROXY_TARGET'),
+              changeOrigin: true,
+              rewrite: (path: string) =>
+                path.replace(/^\/api\/auth/, '/auth'),
+            },
+            '/api/rooms': {
+              target: requireEnv(env, 'ROOMS_PROXY_TARGET'),
+              changeOrigin: true,
+              rewrite: (path: string) =>
+                path.replace(/^\/api\/rooms/, '/rooms'),
+            },
+            '/api/content': {
+              target: requireEnv(env, 'CONTENT_PROXY_TARGET'),
+              changeOrigin: true,
+              rewrite: (path: string) =>
+                path.replace(/^\/api\/content/, ''),
+            },
+            '/api/characters': {
+              target: requireEnv(env, 'CHARACTER_PROXY_TARGET'),
+              changeOrigin: true,
+              rewrite: (path: string) =>
+                path.replace(/^\/api\/characters/, ''),
+            },
+            '/media': {
+              target: requireEnv(env, 'CONTENT_PROXY_TARGET'),
+              changeOrigin: true,
+            },
+          },
+        }
+      : undefined;
+
+  return {
+    plugins: [react(), tailwindcss()],
+    server,
+  };
 });
