@@ -50,7 +50,7 @@ export function ReviewStep({ draft, equipmentItems }: ReviewStepProps) {
             {draft.race} · {draft.characterClass} ({draft.subclass})
           </Typography>
           <Typography variant="body2" color="text.secondary">Уровень {draft.level} · {draft.background}</Typography>
-          <Box sx={{ my: 1.2, height: 1, background: `linear-gradient(90deg, ${playerRoomColors.border}, transparent)` }} />
+          <Box sx={{ my: 1.2, height: '1px', background: `linear-gradient(90deg, ${playerRoomColors.border}, transparent)` }} />
           <Stack spacing={0.5}>
             {[
               ['Класс доспеха', stats.armorClass],
