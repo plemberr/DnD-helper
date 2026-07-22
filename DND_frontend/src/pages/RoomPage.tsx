@@ -21,7 +21,7 @@ import {
 import { roomsService, type JoinRequestListItemDto, type RoomDetailDto } from '../api/roomsService';
 import { AppHeader } from '../components/AppHeader';
 import { useAuth } from '../context/AuthContext';
-import { fantasyPageBackground, fantasyTokens, ornateCornersSx } from '../theme/fantasyTheme';
+import {  fantasyColors,  fantasyGradients, fantasyPageBackground,  fantasyShadows, fantasyTokens, ornateCornersSx, } from '../theme/fantasyTheme';
 import { readAccessToken } from '../utils/authSession';
 import { readActiveAdminRoomId, saveActiveAdminRoomId } from '../utils/roomSession';
 
