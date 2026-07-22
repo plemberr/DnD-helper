@@ -8,7 +8,7 @@ app = FastAPI(
     version="1.1.0",
 )
 
-app.include_router(auth.router)
+app.include_router(auth.router, prefix="/api")
 
 
 @app.get("/health", tags=["health"])
