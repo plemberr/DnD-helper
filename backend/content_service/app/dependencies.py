@@ -82,7 +82,7 @@ async def require_room_master(
     """
     async with httpx.AsyncClient(timeout=settings.room_service_timeout_seconds) as client:
         try:
-            response = await client.get(f"{settings.room_service_url}/api/rooms/{room_id}/members")
+            response = await client.get(f"{settings.room_service_url}/rooms/{room_id}/members")
         except httpx.RequestError:
             raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Room service недоступен")
 

@@ -10,12 +10,12 @@ app = FastAPI(
     version="0.1.0",
 )
 
-app.include_router(document_folders.router, prefix="/api")
-app.include_router(documents.router, prefix="/api")
-app.include_router(media_folders.router, prefix="/api")
-app.include_router(media.router, prefix="/api")
-app.include_router(favorites.router, prefix="/api")
-app.include_router(search.router, prefix="/api")
+app.include_router(document_folders.router)
+app.include_router(documents.router)
+app.include_router(media_folders.router)
+app.include_router(media.router)
+app.include_router(favorites.router)
+app.include_router(search.router)
 
 app.mount("/media", StaticFiles(directory=settings.media_storage_path), name="media")
 

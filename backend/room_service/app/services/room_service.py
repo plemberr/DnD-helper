@@ -19,7 +19,7 @@ async def _fetch_current_username(access_token: str) -> str:
     async with httpx.AsyncClient(timeout=settings.auth_service_timeout_seconds) as client:
         try:
             response = await client.get(
-                f"{settings.auth_service_url}/api/auth/me",
+                f"{settings.auth_service_url}/auth/me",
                 headers={"Authorization": f"Bearer {access_token}"},
             )
         except httpx.RequestError:
